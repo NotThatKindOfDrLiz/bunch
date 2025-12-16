@@ -25,10 +25,16 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </BrowserRouter>
     <Toaster toastOptions={{
       position: 'top-center',
+      duration: 3000,
       style: {
         background: '#1D1C1C',
         color: '#FFF5EB',
         borderRadius: '16px',
+        padding: '16px 20px',
+        fontSize: '14px',
+        fontWeight: '500',
+        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
       },
     }} />
   </React.StrictMode>,

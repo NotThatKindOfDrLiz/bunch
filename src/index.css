@@ -9,7 +9,9 @@ body,
 }
 
 body {
-  @apply bg-brand-cream text-brand-charcoal font-sans; 
+  @apply bg-brand-cream text-brand-charcoal font-sans;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 input, button, textarea, select {
@@ -27,4 +29,8 @@ input, button, textarea, select {
 ::-webkit-scrollbar-thumb {
   background: rgba(0, 0, 0, 0.2);
   border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
 }

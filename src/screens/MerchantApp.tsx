@@ -60,22 +60,22 @@ export const MerchantApp = () => {
 
   return (
     <div className="min-h-screen bg-brand-cream text-brand-charcoal">
-      <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 px-6 py-4 border-b border-black/10">
-        <div className="flex items-center gap-3">
+      <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 px-6 py-5 border-b border-black/10 bg-white/50 backdrop-blur-sm">
+        <div className="flex items-center gap-4">
           <img src="/logo-name.png" alt="Bunch" className="h-10 md:h-12" />
-          <div className="border-l border-black/20 pl-3">
-            <h2 className="text-xl font-semibold">Merchant</h2>
-            <p className="text-xs text-black/70">Drop-in Bitcoin loyalty punch cards</p>
+          <div className="border-l border-black/20 pl-4">
+            <h2 className="text-xl font-bold tracking-tight">Merchant</h2>
+            <p className="text-xs text-black/70 font-medium">Drop-in Bitcoin loyalty punch cards</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {session && (
             <button
               className={classNames(
-                'px-4 py-2 rounded-full text-sm font-semibold transition',
+                'px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-200 shadow-sm',
                 session.demoMode
-                  ? 'bg-brand-orange text-white shadow-sm'
-                  : 'bg-white border border-brand-orange text-brand-orange hover:bg-brand-orange/10',
+                  ? 'bg-gradient-to-r from-brand-orange to-orange-500 text-white shadow-md hover:shadow-lg hover:scale-105 active:scale-95'
+                  : 'bg-white border-2 border-brand-orange text-brand-orange hover:bg-brand-orange/10 hover:border-brand-orange/80',
               )}
               onClick={() => toggleDemoMode()}
             >
@@ -83,7 +83,7 @@ export const MerchantApp = () => {
             </button>
           )}
           <button
-            className="px-4 py-2 rounded-full bg-black text-white text-sm font-semibold hover:bg-black/80"
+            className="px-5 py-2.5 rounded-full bg-black text-white text-sm font-bold shadow-md hover:bg-black/90 hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-200"
             onClick={() => window.open('/customer', '_blank')}
           >
             Open customer view
@@ -92,7 +92,7 @@ export const MerchantApp = () => {
       </header>
 
       <main className="grid lg:grid-cols-[420px_1fr] min-h-[calc(100vh-96px)]">
-        <section className="border-r border-black/10 p-6 space-y-6 bg-brand-cream/60">
+        <section className="border-r border-black/10 p-6 space-y-6 bg-gradient-to-b from-brand-cream/80 to-brand-cream/60">
           {card ? <CardStats card={card} onDelete={deleteCard} /> : <EmptyStateCard onCreate={handleCreateCard} />}
 
           {session && card ? (
@@ -103,13 +103,13 @@ export const MerchantApp = () => {
               onEndSession={endSession}
             />
           ) : (
-            <div className="bg-white rounded-3xl shadow-sm p-6 space-y-4">
-              <h2 className="text-xl font-semibold">Session</h2>
-              <p className="text-sm text-black/70">
+            <div className="bg-white rounded-3xl shadow-lg p-6 space-y-4 border border-black/5">
+              <h2 className="text-xl font-bold tracking-tight">Session</h2>
+              <p className="text-sm text-black/70 leading-relaxed">
                 Start a session to accept customers. A session uses the current punch card and clears when you end it.
               </p>
               <button
-                className="w-full py-3 rounded-2xl bg-brand-orange text-white font-semibold text-base"
+                className="w-full py-4 rounded-2xl bg-gradient-to-r from-brand-orange to-orange-500 text-white font-bold text-base shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
                 onClick={() => startSession(true)}
               >
                 Start demo session
@@ -121,30 +121,30 @@ export const MerchantApp = () => {
         </section>
 
         <section className="p-6 space-y-6 bg-brand-cream">
-          <div className="bg-white rounded-3xl shadow-sm p-6 min-h-[220px]">
-            <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4">
-              <h2 className="text-xl font-semibold">Waiting for payment</h2>
-              <p className="text-sm text-black/60">
+          <div className="bg-white rounded-3xl shadow-lg p-6 min-h-[220px] border border-black/5">
+            <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-5">
+              <h2 className="text-xl font-bold tracking-tight">Waiting for payment</h2>
+              <p className="text-sm text-black/60 font-medium">
                 {pendingPurchases.length} purchase{pendingPurchases.length === 1 ? '' : 's'} pending
               </p>
             </header>
             {pendingPurchases.length === 0 ? (
-              <div className="text-center text-sm text-black/50 py-10">Waiting for customer scans…</div>
+              <div className="text-center text-sm text-black/50 py-12 font-medium">Waiting for customer scans…</div>
             ) : (
               <div className="space-y-4">
                 {pendingPurchases.map((purchase) => (
                   <div
                     key={purchase.nonce}
-                    className="border border-black/10 rounded-2xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3"
+                    className="border border-black/10 rounded-2xl p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-gradient-to-br from-white to-brand-cream/30 shadow-sm hover:shadow-md transition-shadow duration-200"
                   >
-                    <div className="space-y-1">
-                      <p className="font-semibold text-lg">Purchase #{purchase.nonce.slice(0, 5)}</p>
-                      <p className="text-xs text-black/50">
+                    <div className="space-y-1.5">
+                      <p className="font-bold text-lg tracking-tight">Purchase #{purchase.nonce.slice(0, 5)}</p>
+                      <p className="text-xs text-black/50 font-medium">
                         Expires in {Math.max(0, Math.floor((purchase.expiresAt - Date.now()) / 60000))} min
                       </p>
                     </div>
                     <button
-                      className="px-5 py-2 rounded-xl bg-brand-orange text-white text-sm font-semibold"
+                      className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-orange to-orange-500 text-white text-sm font-bold shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-200"
                       onClick={() => markPaid(purchase.nonce)}
                     >
                       Mark paid

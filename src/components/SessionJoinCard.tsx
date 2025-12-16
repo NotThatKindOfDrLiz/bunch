@@ -32,50 +32,73 @@ export const SessionJoinCard = ({ onJoin }: SessionJoinCardProps) => {
   }
 
   return (
-    <section className="bg-black/20 border border-white/10 rounded-3xl p-6 space-y-4">
-      <header>
-        <h2 className="text-lg font-semibold">Join a merchant session</h2>
-        <p className="text-sm text-white/70">Scan the code shown at checkout or paste the join code.</p>
-      </header>
-      <div className="flex flex-col gap-3">
-        <button className="py-3 rounded-2xl bg-brand-orange text-black font-semibold" onClick={() => setShowScanner(true)}>
-          Scan join QR
-        </button>
-        <div className="bg-black/40 rounded-2xl p-4 space-y-3">
-          <label className="text-xs uppercase tracking-[0.2em] text-white/60">Have a join code?</label>
-          <form
-            className="flex gap-2"
-            onSubmit={(event) => {
-              event.preventDefault()
-              if (!manualCode.trim()) {
-                toast.error('Enter join code')
-                return
-              }
-              handleJoin({
-                type: 'join-session',
-                sessionId: manualCode.trim().toUpperCase(),
-                joinCode: manualCode.trim().toUpperCase(),
-                card: {
-                  id: 'manual',
-                  title: 'Merchant card',
-                  punchesRequired: 5,
-                  minSats: 1000,
-                },
-                demoMode: true,
-              })
-            }}
+    <section className="max-w-2xl mx-auto bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl overflow-hidden">
+      <div className="p-6 sm:p-8 space-y-6">
+        <header className="space-y-2 text-center sm:text-left">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Join a merchant session</h2>
+          <p className="text-sm sm:text-base text-brand-cream/70 leading-relaxed">
+            Scan the QR code shown at checkout or enter the join code manually
+          </p>
+        </header>
+        
+        <div className="space-y-4">
+          <button 
+            className="w-full py-4 rounded-2xl bg-gradient-to-r from-brand-orange to-orange-500 text-black font-bold text-base shadow-xl hover:shadow-2xl hover:scale-[1.01] active:scale-[0.99] transition-all duration-200" 
+            onClick={() => setShowScanner(true)}
           >
-            <input
-              className="flex-1 px-4 py-3 rounded-2xl bg-black/30 border border-white/10 text-lg uppercase tracking-[0.5em]"
-              value={manualCode}
-              onChange={(event) => setManualCode(event.target.value.toUpperCase())}
-              placeholder="JOIN"
-              maxLength={6}
-            />
-            <button type="submit" className="px-4 py-3 rounded-2xl bg-brand-orange text-black font-semibold">
-              Join
-            </button>
-          </form>
+            📷 Scan Join QR Code
+          </button>
+          
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"></div>
+            <div className="relative flex items-center gap-4 py-4">
+              <div className="flex-1 h-px bg-white/10"></div>
+              <span className="text-xs uppercase tracking-wider text-brand-cream/40 font-medium">OR</span>
+              <div className="flex-1 h-px bg-white/10"></div>
+            </div>
+          </div>
+
+          <div className="bg-white/5 rounded-2xl p-5 space-y-4 border border-white/10">
+            <label className="block text-xs uppercase tracking-wider text-brand-cream/60 font-semibold">
+              Enter Join Code
+            </label>
+            <form
+              className="flex flex-col sm:flex-row gap-3"
+              onSubmit={(event) => {
+                event.preventDefault()
+                if (!manualCode.trim()) {
+                  toast.error('Enter join code')
+                  return
+                }
+                handleJoin({
+                  type: 'join-session',
+                  sessionId: manualCode.trim().toUpperCase(),
+                  joinCode: manualCode.trim().toUpperCase(),
+                  card: {
+                    id: 'manual',
+                    title: 'Merchant card',
+                    punchesRequired: 5,
+                    minSats: 1000,
+                  },
+                  demoMode: true,
+                })
+              }}
+            >
+              <input
+                className="flex-1 px-5 py-4 rounded-xl bg-black/30 border border-white/10 text-lg uppercase tracking-widest font-mono text-center focus:outline-none focus:ring-2 focus:ring-brand-orange/50 focus:border-brand-orange/50 transition-all placeholder:text-brand-cream/20"
+                value={manualCode}
+                onChange={(event) => setManualCode(event.target.value.toUpperCase())}
+                placeholder="ABC123"
+                maxLength={6}
+              />
+              <button 
+                type="submit" 
+                className="px-6 py-4 rounded-xl bg-gradient-to-r from-brand-orange to-orange-500 text-black font-bold text-base shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200"
+              >
+                Join
+              </button>
+            </form>
+          </div>
         </div>
       </div>
 

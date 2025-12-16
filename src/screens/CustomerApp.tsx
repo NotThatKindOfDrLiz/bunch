@@ -51,18 +51,25 @@ export const CustomerApp = () => {
   }
 
   return (
-    <div className="min-h-screen bg-brand-charcoal text-brand-cream">
-      <header className="p-6 pb-4">
-        <div className="flex items-center gap-3 mb-3">
-          <img src="/logo-name.png" alt="Bunch" className="h-8 brightness-0 invert" />
-        </div>
-        <div className="space-y-1">
-          <p className="uppercase text-xs tracking-[0.2em] text-brand-orange">Customer</p>
-          <h1 className="text-2xl font-bold">Earn punches after you pay</h1>
+    <div className="min-h-screen bg-gradient-to-br from-brand-charcoal via-brand-charcoal to-black text-brand-cream">
+      <header className="px-4 sm:px-6 pt-8 sm:pt-10 pb-6">
+        <div className="mb-6">
+          <div className="inline-flex items-center gap-2 mb-3">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-brand-orange to-orange-600 flex items-center justify-center shadow-lg">
+              <span className="text-white font-bold text-lg sm:text-xl">B</span>
+            </div>
+            <span className="text-xl sm:text-2xl font-bold tracking-tight">Bunch</span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight leading-tight mb-2">
+            Earn punches after you pay
+          </h1>
+          <p className="text-sm sm:text-base text-brand-cream/60">
+            Join a merchant session to start earning rewards
+          </p>
         </div>
       </header>
 
-      <main className="p-6 space-y-6">
+      <main className="px-4 sm:px-6 pb-8">
         {!state ? (
           <SessionJoinCard
             onJoin={(snapshot) => {
@@ -70,58 +77,76 @@ export const CustomerApp = () => {
             }}
           />
         ) : (
-          <section className="bg-black/20 rounded-3xl border border-white/10 p-6 space-y-6">
-            <div className="space-y-2">
-              <p className="text-xs uppercase tracking-[0.3em] text-brand-cream/50">Merchant session</p>
-              <h2 className="text-2xl font-semibold">{state.cardTitle}</h2>
-              <p className="text-sm text-brand-cream/70">
-                Earn {state.punchesRequired} {state.punchesRequired === 1 ? 'punch' : 'punches'} to unlock your reward.
-              </p>
-            </div>
+          <div className="max-w-2xl mx-auto space-y-6">
+            <section className="bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl overflow-hidden">
+              <div className="p-6 sm:p-8 space-y-6">
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <p className="text-xs uppercase tracking-wider text-brand-orange/80 font-semibold mb-2">
+                        Active Session
+                      </p>
+                      <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2">
+                        {state.cardTitle}
+                      </h2>
+                      <p className="text-sm sm:text-base text-brand-cream/70 leading-relaxed">
+                        Earn {state.punchesRequired} {state.punchesRequired === 1 ? 'punch' : 'punches'} to unlock your reward
+                      </p>
+                    </div>
+                  </div>
 
-            <div className="space-y-3">
-              <p className="text-xs uppercase tracking-[0.3em] text-brand-cream/50">Punch progress</p>
-              <div className="bg-black/30 rounded-2xl overflow-hidden">
-                <div className="bg-brand-orange h-3 transition-all" style={{ width: `${progress.ratio * 100}%` }} />
+                  <div className="pt-4 border-t border-white/10">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs uppercase tracking-wider text-brand-cream/50 font-medium">
+                        Progress
+                      </span>
+                      <span className="text-sm font-bold text-brand-cream/90">
+                        {progress.punchesEarned} / {state.punchesRequired}
+                      </span>
+                    </div>
+                    <div className="relative bg-black/40 rounded-full overflow-hidden h-3 shadow-inner">
+                      <div 
+                        className="absolute inset-y-0 left-0 bg-gradient-to-r from-brand-orange via-orange-500 to-orange-400 rounded-full transition-all duration-700 ease-out shadow-lg" 
+                        style={{ width: `${progress.ratio * 100}%` }} 
+                      />
+                    </div>
+                    <p className="text-xs text-brand-cream/50 mt-2 font-medium">
+                      Minimum purchase: {formatSats(state.minSats)}
+                    </p>
+                  </div>
+                </div>
               </div>
-              <p className="text-sm text-brand-cream/70">
-                {progress.punchesEarned} / {state.punchesRequired} punches • Min purchase {formatSats(state.minSats)}
-              </p>
-            </div>
 
-            <div className="flex flex-col gap-3">
-              <button
-                className="py-3 rounded-2xl bg-brand-orange text-black font-semibold"
-                onClick={() => setScannerMode('purchase')}
-              >
-                Scan purchase QR
-              </button>
-              <button
-                className={classNames(
-                  'py-3 rounded-2xl border border-white/20 text-base font-semibold transition',
-                  state.punchesEarned >= state.punchesRequired
-                    ? 'bg-brand-green text-black'
-                    : 'bg-transparent text-brand-cream/70',
-                )}
-                onClick={requestRedemption}
-                disabled={state.punchesEarned < state.punchesRequired}
-              >
-                Redeem reward
-              </button>
-              <button className="py-3 rounded-2xl text-sm text-brand-cream/50 underline" onClick={leaveSession}>
-                Leave session
-              </button>
-            </div>
-          </section>
+              <div className="px-6 sm:px-8 pb-6 sm:pb-8 space-y-3">
+                <button
+                  className="w-full py-4 rounded-2xl bg-gradient-to-r from-brand-orange to-orange-500 text-black font-bold text-base shadow-xl hover:shadow-2xl hover:scale-[1.01] active:scale-[0.99] transition-all duration-200"
+                  onClick={() => setScannerMode('purchase')}
+                >
+                  Scan Purchase QR
+                </button>
+                <button
+                  className={classNames(
+                    'w-full py-4 rounded-2xl text-base font-bold transition-all duration-200',
+                    state.punchesEarned >= state.punchesRequired
+                      ? 'bg-gradient-to-r from-brand-green to-green-500 text-black shadow-xl hover:shadow-2xl hover:scale-[1.01] active:scale-[0.99]'
+                      : 'bg-white/5 text-brand-cream/40 border border-white/10 cursor-not-allowed',
+                  )}
+                  onClick={requestRedemption}
+                  disabled={state.punchesEarned < state.punchesRequired}
+                >
+                  {state.punchesEarned >= state.punchesRequired ? '🎉 Redeem Reward' : 'Complete punches to redeem'}
+                </button>
+                <button 
+                  className="w-full py-3 rounded-xl text-sm text-brand-cream/50 hover:text-brand-cream/70 transition-colors duration-200 font-medium" 
+                  onClick={leaveSession}
+                >
+                  Leave session
+                </button>
+              </div>
+            </section>
+          </div>
         )}
       </main>
-
-      <button
-        className="fixed bottom-6 right-6 px-4 py-3 rounded-2xl bg-white/10 border border-white/20 text-sm"
-        onClick={() => setScannerMode(state ? 'purchase' : 'join')}
-      >
-        {state ? 'Scan purchase' : 'Scan join QR'}
-      </button>
 
       <QRModal
         open={Boolean(scannerMode)}

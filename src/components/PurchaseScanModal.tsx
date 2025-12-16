@@ -28,18 +28,20 @@ export const PurchaseScanModal = ({ open, onOpenChange, purchase, card, session 
   if (!open || !payload) return null
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60">
-      <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-[420px] space-y-6 text-center">
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-[420px] space-y-6 text-center border border-black/5">
         <header className="space-y-2">
-          <h2 className="text-2xl font-semibold">Share purchase QR</h2>
-          <p className="text-sm text-black/60">Customer scans this after they pay in your BTC terminal.</p>
+          <h2 className="text-2xl font-bold tracking-tight">Share purchase QR</h2>
+          <p className="text-sm text-black/60 leading-relaxed">Customer scans this after they pay in your BTC terminal.</p>
         </header>
-        <QRCodeSVG value={JSON.stringify(payload)} size={260} className="mx-auto" />
-        <p className="text-xs text-black/50">
+        <div className="bg-gradient-to-br from-brand-cream to-brand-cream/50 p-4 rounded-2xl border border-black/5 shadow-sm">
+          <QRCodeSVG value={JSON.stringify(payload)} size={260} className="mx-auto" />
+        </div>
+        <p className="text-xs text-black/50 leading-relaxed">
           QR includes the punch card ID, single-use nonce, and minimum sats. Expires automatically in 10 minutes.
         </p>
         <button
-          className="w-full py-3 rounded-2xl bg-brand-orange text-white font-semibold text-lg"
+          className="w-full py-4 rounded-2xl bg-gradient-to-r from-brand-orange to-orange-500 text-white font-bold text-lg shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
           onClick={() => onOpenChange(false)}
         >
           Close

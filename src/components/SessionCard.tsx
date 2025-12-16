@@ -23,28 +23,36 @@ export const SessionCard = ({ card, session, onNewPurchase, onEndSession }: Sess
   }
 
   return (
-    <div className="bg-white rounded-3xl shadow-sm p-6 space-y-4">
-      <h2 className="text-xl font-semibold">Session</h2>
-      <div className="text-sm text-black/70 space-y-1">
-        <p>Join code</p>
-        <p className="text-3xl font-mono tracking-[0.4em] text-center py-2 bg-brand-cream rounded-2xl">
+    <div className="bg-white rounded-3xl shadow-lg p-6 space-y-5 border border-black/5">
+      <h2 className="text-xl font-bold tracking-tight">Session</h2>
+      <div className="text-sm text-black/70 space-y-2">
+        <p className="font-medium">Join code</p>
+        <p className="text-3xl font-mono tracking-[0.4em] text-center py-3 bg-gradient-to-br from-brand-cream to-brand-cream/50 rounded-2xl border border-black/5 font-bold text-brand-charcoal">
           {session.joinCode}
         </p>
-        <p className="text-xs text-black/50 text-center">
+        <p className="text-xs text-black/50 text-center leading-relaxed">
           Customers scan or enter this code at <span className="font-semibold">bunch.local/customer</span>
         </p>
       </div>
-      <div className="flex flex-col items-center gap-3">
-        <QRCodeSVG value={JSON.stringify(joinPayload)} size={220} className="bg-brand-cream p-4 rounded-2xl" />
-        <p className="text-xs text-black/50 text-center max-w-[240px]">
+      <div className="flex flex-col items-center gap-4">
+        <div className="bg-gradient-to-br from-brand-cream to-brand-cream/50 p-4 rounded-2xl border border-black/5 shadow-sm">
+          <QRCodeSVG value={JSON.stringify(joinPayload)} size={220} />
+        </div>
+        <p className="text-xs text-black/50 text-center max-w-[240px] leading-relaxed">
           Customers can also join by pasting this code if their camera is unavailable.
         </p>
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <button className="py-3 rounded-2xl bg-brand-orange text-white font-semibold text-lg" onClick={onNewPurchase}>
+        <button 
+          className="py-3.5 rounded-2xl bg-gradient-to-r from-brand-orange to-orange-500 text-white font-bold text-base shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200" 
+          onClick={onNewPurchase}
+        >
           New purchase
         </button>
-        <button className="py-3 rounded-2xl bg-black text-white font-semibold text-lg" onClick={onEndSession}>
+        <button 
+          className="py-3.5 rounded-2xl bg-black text-white font-bold text-base shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200" 
+          onClick={onEndSession}
+        >
           End session
         </button>
       </div>
