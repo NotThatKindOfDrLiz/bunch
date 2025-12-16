@@ -14,6 +14,12 @@ declare global {
 
 window.bunchVersion = '0.1.0'
 
+// Handle GitHub Pages 404 redirect
+if (window.location.search.includes('?/')) {
+  const path = window.location.search.replace('?/', '').replace(/~and~/g, '&')
+  window.history.replaceState({}, '', `${import.meta.env.BASE_URL}${path}`)
+}
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter basename="/bunch">

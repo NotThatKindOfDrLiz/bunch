@@ -62,7 +62,7 @@ export const MerchantApp = () => {
     <div className="min-h-screen bg-brand-cream text-brand-charcoal">
       <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 px-6 py-5 border-b border-black/10 bg-white/50 backdrop-blur-sm">
         <div className="flex items-center gap-4">
-          <img src="/logo-name.png" alt="Bunch" className="h-10 md:h-12" />
+          <img src={`${import.meta.env.BASE_URL}logo-name.png`} alt="Bunch" className="h-10 md:h-12" />
           <div className="border-l border-black/20 pl-4">
             <h2 className="text-xl font-bold tracking-tight">Merchant</h2>
             <p className="text-xs text-black/70 font-medium">Drop-in Bitcoin loyalty punch cards</p>
