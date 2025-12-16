@@ -53,9 +53,12 @@ export const CustomerApp = () => {
   return (
     <div className="min-h-screen bg-brand-charcoal text-brand-cream">
       <header className="p-6 pb-4">
+        <div className="flex items-center gap-3 mb-3">
+          <img src="/logo-name.png" alt="Bunch" className="h-8 brightness-0 invert" />
+        </div>
         <div className="space-y-1">
-          <p className="uppercase text-xs tracking-[0.2em] text-brand-orange">Bunch customer</p>
-          <h1 className="text-3xl font-bold">Earn punches after you pay</h1>
+          <p className="uppercase text-xs tracking-[0.2em] text-brand-orange">Customer</p>
+          <h1 className="text-2xl font-bold">Earn punches after you pay</h1>
         </div>
       </header>
 

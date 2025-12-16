@@ -61,9 +61,12 @@ export const MerchantApp = () => {
   return (
     <div className="min-h-screen bg-brand-cream text-brand-charcoal">
       <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 px-6 py-4 border-b border-black/10">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Bunch Merchant</h1>
-          <p className="text-sm text-black/70">Drop-in Bitcoin loyalty punch cards.</p>
+        <div className="flex items-center gap-3">
+          <img src="/logo-name.png" alt="Bunch" className="h-10 md:h-12" />
+          <div className="border-l border-black/20 pl-3">
+            <h2 className="text-xl font-semibold">Merchant</h2>
+            <p className="text-xs text-black/70">Drop-in Bitcoin loyalty punch cards</p>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           {session && (
