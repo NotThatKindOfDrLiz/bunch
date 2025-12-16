@@ -154,8 +154,18 @@ export const CustomerApp = () => {
                       <input
                         className="flex-1 px-5 py-4 rounded-xl bg-black/30 border border-white/10 text-lg uppercase tracking-widest font-mono text-center focus:outline-none focus:ring-2 focus:ring-brand-orange/50 focus:border-brand-orange/50 transition-all placeholder:text-brand-cream/20"
                         value={manualPurchaseCode}
-                        onChange={(event) => setManualPurchaseCode(event.target.value.toUpperCase())}
-                        placeholder="Enter code..."
+                        onChange={(event) => {
+                          // Trim whitespace and convert to uppercase
+                          const cleaned = event.target.value.trim().toUpperCase().replace(/\s+/g, '')
+                          setManualPurchaseCode(cleaned)
+                        }}
+                        onPaste={(event) => {
+                          // Handle paste - trim and clean the pasted text
+                          const pasted = event.clipboardData.getData('text').trim().toUpperCase().replace(/\s+/g, '')
+                          setManualPurchaseCode(pasted)
+                          event.preventDefault()
+                        }}
+                        placeholder="Paste purchase code..."
                         autoFocus
                       />
                       <button 

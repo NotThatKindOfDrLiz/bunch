@@ -40,11 +40,21 @@ export const PurchaseScanModal = ({ open, onOpenChange, purchase, card, session 
         {purchase && (
           <div className="bg-brand-cream/50 rounded-2xl p-4 border border-black/5">
             <p className="text-xs uppercase tracking-wider text-black/50 font-semibold mb-2">Purchase Code</p>
-            <p className="text-2xl font-mono tracking-wider text-center font-bold text-brand-charcoal break-all">
+            <div 
+              className="text-2xl font-mono tracking-wider text-center font-bold text-brand-charcoal break-all cursor-pointer select-all px-2 py-1 rounded-lg hover:bg-brand-cream/70 transition-colors"
+              onClick={(e) => {
+                const text = e.currentTarget.textContent
+                if (text) {
+                  navigator.clipboard.writeText(text.trim())
+                  toast.success('Code copied!')
+                }
+              }}
+              title="Click to copy"
+            >
               {purchase.nonce}
-            </p>
+            </div>
             <p className="text-xs text-black/50 mt-2 text-center">
-              Customer can enter this code manually if they can't scan
+              Click code to copy • Customer can paste this code manually
             </p>
           </div>
         )}

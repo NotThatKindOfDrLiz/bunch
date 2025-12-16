@@ -116,24 +116,36 @@ export const useMerchantStore = (): UseMerchantStoreResult => {
               if (session) {
                 // Get pending purchases from state (already loaded)
                 const pending = state.pendingPurchases.filter(p => !p.redeemedAt && p.sessionId === session.id)
-                console.log('[Merchant] Customer claiming nonce:', message.payload.purchaseNonce)
+                // Clean the entered nonce (remove whitespace, normalize)
+                const cleanedEntered = message.payload.purchaseNonce.trim().replace(/\s+/g, '')
+                console.log('[Merchant] Customer claiming nonce:', cleanedEntered, '(original:', message.payload.purchaseNonce, ')')
                 console.log('[Merchant] Available pending purchase nonces:', pending.map(p => p.nonce))
+                
                 if (pending.length === 0) {
                   console.log('[Merchant] No pending purchases! Merchant needs to generate a purchase QR first.')
                 } else {
-                  // Try multiple matching strategies
-                  const exactMatch = pending.find(p => p.nonce === message.payload.purchaseNonce)
-                  const caseMatch = pending.find(p => p.nonce.toLowerCase() === message.payload.purchaseNonce.toLowerCase())
-                  // Try partial match (in case of typos)
+                  // Try multiple matching strategies with cleaned nonce
+                  const exactMatch = pending.find(p => p.nonce === cleanedEntered)
+                  const caseMatch = pending.find(p => p.nonce.toLowerCase() === cleanedEntered.toLowerCase())
+                  // Try normalized match (remove all non-alphanumeric)
+                  const normalizedMatch = pending.find(p => {
+                    const enteredNorm = cleanedEntered.toLowerCase().replace(/[^a-z0-9]/g, '')
+                    const actualNorm = p.nonce.toLowerCase().replace(/[^a-z0-9]/g, '')
+                    return enteredNorm === actualNorm
+                  })
+                  // Try partial match (first 10 chars)
                   const partialMatch = pending.find(p => {
-                    const entered = message.payload.purchaseNonce.toLowerCase().replace(/[^a-z0-9]/g, '')
+                    const entered = cleanedEntered.toLowerCase().replace(/[^a-z0-9]/g, '')
                     const actual = p.nonce.toLowerCase().replace(/[^a-z0-9]/g, '')
-                    return entered === actual || entered.includes(actual.slice(0, 10)) || actual.includes(entered.slice(0, 10))
+                    return entered.length >= 10 && actual.length >= 10 && 
+                           (entered.slice(0, 10) === actual.slice(0, 10) || 
+                            entered.includes(actual.slice(0, 10)) || 
+                            actual.includes(entered.slice(0, 10)))
                   })
                   
-                  const match = exactMatch || caseMatch || partialMatch
+                  const match = exactMatch || caseMatch || normalizedMatch || partialMatch
                   if (match) {
-                    console.log('[Merchant] Found match! Customer entered:', message.payload.purchaseNonce, '→ Using correct nonce:', match.nonce)
+                    console.log('[Merchant] ✅ Found match! Customer entered:', cleanedEntered, '→ Using correct nonce:', match.nonce)
                     // Use the correct nonce from the database
                     const correctedPurchase = await getPurchaseNonce(match.nonce)
                     if (correctedPurchase) {
@@ -147,8 +159,12 @@ export const useMerchantStore = (): UseMerchantStoreResult => {
                       return
                     }
                   } else {
-                    console.log('[Merchant] No match found. Customer entered:', message.payload.purchaseNonce)
+                    console.log('[Merchant] ❌ No match found. Customer entered:', cleanedEntered)
                     console.log('[Merchant] Available nonces are:', pending.map(p => p.nonce))
+                    // Show the available nonce in a toast so merchant can tell customer
+                    if (pending.length === 1) {
+                      toast.error(`Customer used wrong code. Correct code: ${pending[0].nonce}`, { duration: 5000 })
+                    }
                   }
                 }
               }
