@@ -120,7 +120,60 @@ export const CustomerApp = () => {
               </div>
 
               <div className="px-6 sm:px-8 pb-6 sm:pb-8 space-y-3">
-                {!showManualEntry ? (
+                {showManualEntry ? (
+                  <div className="bg-white/5 rounded-2xl p-5 space-y-4 border border-white/10">
+                    <label className="block text-xs uppercase tracking-wider text-brand-cream/60 font-semibold">
+                      Enter Purchase Code
+                    </label>
+                    <form
+                      className="flex flex-col sm:flex-row gap-3"
+                      onSubmit={(event) => {
+                        event.preventDefault()
+                        if (!manualPurchaseCode.trim()) {
+                          toast.error('Enter purchase code')
+                          return
+                        }
+                        if (!state) {
+                          toast.error('Not in a session')
+                          return
+                        }
+                        handlePurchaseScan({
+                          nonce: manualPurchaseCode.trim(),
+                          sessionId: state.sessionId,
+                          cardId: state.cardId,
+                          minSats: state.minSats,
+                          createdAt: Date.now(),
+                          expiresAt: Date.now() + 10 * 60 * 1000,
+                        })
+                        setManualPurchaseCode('')
+                        setShowManualEntry(false)
+                      }}
+                    >
+                      <input
+                        className="flex-1 px-5 py-4 rounded-xl bg-black/30 border border-white/10 text-lg uppercase tracking-widest font-mono text-center focus:outline-none focus:ring-2 focus:ring-brand-orange/50 focus:border-brand-orange/50 transition-all placeholder:text-brand-cream/20"
+                        value={manualPurchaseCode}
+                        onChange={(event) => setManualPurchaseCode(event.target.value.toUpperCase())}
+                        placeholder="Enter code..."
+                        autoFocus
+                      />
+                      <button 
+                        type="submit" 
+                        className="px-6 py-4 rounded-xl bg-gradient-to-r from-brand-orange to-orange-500 text-black font-bold text-base shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200"
+                      >
+                        Submit
+                      </button>
+                    </form>
+                    <button
+                      className="w-full py-2 text-sm text-brand-cream/50 hover:text-brand-cream/70 transition-colors"
+                      onClick={() => {
+                        setShowManualEntry(false)
+                        setManualPurchaseCode('')
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
                   <>
                     <button
                       className="w-full py-4 rounded-2xl bg-gradient-to-r from-brand-orange to-orange-500 text-black font-bold text-base shadow-xl hover:shadow-2xl hover:scale-[1.01] active:scale-[0.99] transition-all duration-200"
@@ -143,62 +196,6 @@ export const CustomerApp = () => {
                       Enter Purchase Code
                     </button>
                   </>
-                ) : (
-                  <div className="bg-white/5 rounded-2xl p-5 space-y-4 border border-white/10">
-                    <label className="block text-xs uppercase tracking-wider text-brand-cream/60 font-semibold">
-                      Enter Purchase Code
-                    </label>
-                    <form
-                      className="flex flex-col sm:flex-row gap-3"
-                      onSubmit={(event) => {
-                        event.preventDefault()
-                        if (!manualPurchaseCode.trim()) {
-                          toast.error('Enter purchase code')
-                          return
-                        }
-                        if (!state) {
-                          toast.error('Not in a session')
-                          return
-                        }
-                        // Construct purchase nonce from entered code
-                        // The code is the first part of the nonce, we'll use it as-is
-                        // expiresAt is set to 10 minutes from now (same as QR)
-                        handlePurchaseScan({
-                          nonce: manualPurchaseCode.trim(),
-                          sessionId: state.sessionId,
-                          cardId: state.cardId,
-                          minSats: state.minSats,
-                          createdAt: Date.now(),
-                          expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes
-                        })
-                        setManualPurchaseCode('')
-                        setShowManualEntry(false)
-                      }}
-                    >
-                      <input
-                        className="flex-1 px-5 py-4 rounded-xl bg-black/30 border border-white/10 text-lg uppercase tracking-widest font-mono text-center focus:outline-none focus:ring-2 focus:ring-brand-orange/50 focus:border-brand-orange/50 transition-all placeholder:text-brand-cream/20"
-                        value={manualPurchaseCode}
-                        onChange={(event) => setManualPurchaseCode(event.target.value.toUpperCase())}
-                        placeholder="ABC123..."
-                        autoFocus
-                      />
-                      <button 
-                        type="submit" 
-                        className="px-6 py-4 rounded-xl bg-gradient-to-r from-brand-orange to-orange-500 text-black font-bold text-base shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200"
-                      >
-                        Submit
-                      </button>
-                    </form>
-                    <button
-                      className="w-full py-2 text-sm text-brand-cream/50 hover:text-brand-cream/70 transition-colors"
-                      onClick={() => {
-                        setShowManualEntry(false)
-                        setManualPurchaseCode('')
-                      }}
-                    >
-                      Cancel
-                    </button>
-                  </div>
                 )}
                 <button
                   className={classNames(
