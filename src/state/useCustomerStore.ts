@@ -267,28 +267,35 @@ export const useCustomerStore = (): UseCustomerStoreResult => {
 
   const handlePurchaseScan = useCallback(
     async (purchase: PurchaseNonce) => {
+      console.log('[Customer] handlePurchaseScan called with purchase:', purchase)
       persistState((prev) => {
+        console.log('[Customer] handlePurchaseScan - current state:', prev)
         if (!prev || prev.sessionId !== purchase.sessionId) {
+          console.log('[Customer] handlePurchaseScan - wrong session or no state')
           toast.error('Wrong session')
           return prev
         }
         if (purchase.expiresAt < Date.now()) {
+          console.log('[Customer] handlePurchaseScan - expired')
           toast.error('QR expired')
           return prev
         }
         if (prev.purchaseNonces.includes(purchase.nonce)) {
+          console.log('[Customer] handlePurchaseScan - already scanned')
           toast('Already scanned', { icon: 'ℹ️' })
           return prev
         }
-        sendToMerchant.send({
-          type: 'customer:purchase-claimed',
+        const claimMessage = {
+          type: 'customer:purchase-claimed' as const,
           payload: {
             sessionId: prev.sessionId,
             cardId: prev.cardId,
             customerId: prev.customerId,
             purchaseNonce: purchase.nonce,
           },
-        })
+        }
+        console.log('[Customer] Sending customer:purchase-claimed message:', claimMessage)
+        sendToMerchant.send(claimMessage)
         toast('Waiting for merchant…', { icon: '⏳' })
         return {
           ...prev,
