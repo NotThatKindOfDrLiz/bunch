@@ -99,12 +99,15 @@ export const useCustomerStore = (): UseCustomerStoreResult => {
           if (!prev || prev.sessionId !== message.payload.sessionId) return prev
           // Only update if this punch is for this customer
           if (prev.customerId !== message.payload.customerId) return prev
-          return {
+          // Always create a new object to ensure React detects the change
+          const updated = {
             ...prev,
             punchesEarned: message.payload.punchesEarned,
-            punchesRequired: message.payload.punchesRequired ?? prev.punchesRequired, // Update if provided
+            punchesRequired: message.payload.punchesRequired ?? prev.punchesRequired,
             lastUpdatedAt: Date.now(),
           }
+          // Force state update even if values appear the same (React needs new reference)
+          return updated
         })
         toast.success('Punch added!')
         break
@@ -136,10 +139,11 @@ export const useCustomerStore = (): UseCustomerStoreResult => {
           // Only update if the punch count or punchesRequired has changed
           if (prev.punchesEarned === message.payload.punchesEarned && 
               prev.punchesRequired === message.payload.punchesRequired) return prev
+          // Always create a new object to ensure React detects the change
           return {
             ...prev,
             punchesEarned: message.payload.punchesEarned,
-            punchesRequired: message.payload.punchesRequired ?? prev.punchesRequired, // Update if provided
+            punchesRequired: message.payload.punchesRequired ?? prev.punchesRequired,
             lastUpdatedAt: Date.now(),
           }
         })
