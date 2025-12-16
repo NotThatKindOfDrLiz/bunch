@@ -102,6 +102,7 @@ export const useCustomerStore = (): UseCustomerStoreResult => {
           return {
             ...prev,
             punchesEarned: message.payload.punchesEarned,
+            punchesRequired: message.payload.punchesRequired ?? prev.punchesRequired, // Update if provided
             lastUpdatedAt: Date.now(),
           }
         })
@@ -132,11 +133,13 @@ export const useCustomerStore = (): UseCustomerStoreResult => {
         persistState((prev) => {
           if (!prev || prev.sessionId !== message.payload.sessionId) return prev
           if (prev.customerId !== message.payload.customerId) return prev
-          // Only update if the punch count has changed
-          if (prev.punchesEarned === message.payload.punchesEarned) return prev
+          // Only update if the punch count or punchesRequired has changed
+          if (prev.punchesEarned === message.payload.punchesEarned && 
+              prev.punchesRequired === message.payload.punchesRequired) return prev
           return {
             ...prev,
             punchesEarned: message.payload.punchesEarned,
+            punchesRequired: message.payload.punchesRequired ?? prev.punchesRequired, // Update if provided
             lastUpdatedAt: Date.now(),
           }
         })

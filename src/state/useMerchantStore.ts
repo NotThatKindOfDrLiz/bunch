@@ -18,6 +18,7 @@ import {
   deleteRedemptionRequestsBySession,
   deleteSession,
   getCard,
+  getLedgerEntries,
   getPurchaseNonce,
   getSession,
   loadMerchantState,
@@ -141,8 +142,9 @@ export const useMerchantStore = (): UseMerchantStoreResult => {
             // Send session update first
             merchantBroadcast.send({ type: 'merchant:session-update', payload: { session, card } })
             
-            // Then send current punch count for this customer if they have any
-            const customerPunches = state.punchLedger.filter(e => e.customerId === message.payload.customerId).length
+            // Get fresh ledger entries from IndexedDB to ensure accurate count
+            const allLedgerEntries = await getLedgerEntries()
+            const customerPunches = allLedgerEntries.filter(e => e.customerId === message.payload.customerId).length
             if (customerPunches > 0) {
               merchantBroadcast.send({
                 type: 'merchant:punch-awarded',
@@ -167,8 +169,9 @@ export const useMerchantStore = (): UseMerchantStoreResult => {
             if (!session || !card) return
             if (session.id !== message.payload.sessionId) return
             
-            // Send current punch count for this customer
-            const customerPunches = state.punchLedger.filter(e => e.customerId === message.payload.customerId).length
+            // Get fresh ledger entries from IndexedDB to ensure accurate count
+            const allLedgerEntries = await getLedgerEntries()
+            const customerPunches = allLedgerEntries.filter(e => e.customerId === message.payload.customerId).length
             merchantBroadcast.send({
               type: 'merchant:punch-sync',
               payload: {
@@ -356,10 +359,9 @@ export const useMerchantStore = (): UseMerchantStoreResult => {
       const entry = await recordLedgerEntry(purchase, awardCustomerId)
       await savePurchaseNonce({ ...purchase, redeemedAt: Date.now(), customerId: awardCustomerId })
       
-      // Count punches for THIS specific customer (existing + the one we just added)
-      // We need to include the new entry in the count
-      const existingPunches = state.punchLedger.filter(e => e.customerId === awardCustomerId).length
-      const customerPunches = existingPunches + 1
+      // Get fresh ledger entries from IndexedDB to ensure accurate count
+      const allLedgerEntries = await getLedgerEntries()
+      const customerPunches = allLedgerEntries.filter(e => e.customerId === awardCustomerId).length
       
       // Send the punch award message BEFORE refresh so customer gets it immediately
       merchantBroadcast.send({
@@ -375,7 +377,7 @@ export const useMerchantStore = (): UseMerchantStoreResult => {
       toast.success('Punch awarded')
       void refresh()
     },
-    [merchantBroadcast, refresh, state.punchLedger.length],
+    [merchantBroadcast, refresh],
   )
 
   const fulfillRedemption = useCallback(

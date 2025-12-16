@@ -2,6 +2,7 @@ import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { QRModal } from './modals/QRModal'
 import { parsePayload } from '../utils/qr'
+import { getSessionSnapshot } from '../lib/storage'
 import type { SessionSnapshot } from '../types'
 
 interface SessionJoinCardProps {
@@ -72,18 +73,18 @@ export const SessionJoinCard = ({ onJoin }: SessionJoinCardProps) => {
                   toast.error('Enter join code')
                   return
                 }
-                handleJoin({
-                  type: 'join-session',
-                  sessionId: manualCode.trim().toUpperCase(),
-                  joinCode: manualCode.trim().toUpperCase(),
-                  card: {
-                    id: 'manual',
-                    title: 'Merchant card',
-                    punchesRequired: 5,
-                    minSats: 1000,
-                  },
-                  demoMode: true,
-                })
+                const joinCode = manualCode.trim().toUpperCase()
+                // Try to get session snapshot from localStorage first (if previously scanned)
+                const snapshot = getSessionSnapshot(joinCode)
+                if (snapshot) {
+                  // Use the stored snapshot with correct card data
+                  console.log('Using stored snapshot with punchesRequired:', snapshot.punchesRequired)
+                  onJoin(snapshot)
+                  setManualCode('')
+                  return
+                }
+                // If no snapshot found, show error - they need to scan QR or merchant needs to be active
+                toast.error('Session not found. Please scan the QR code or ensure the merchant session is active.')
               }}
             >
               <input
