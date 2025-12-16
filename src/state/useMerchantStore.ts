@@ -137,7 +137,24 @@ export const useMerchantStore = (): UseMerchantStoreResult => {
             const card = await getCard()
             if (!session || !card) return
             if (session.joinCode !== message.payload.joinCode) return
+            
+            // Send session update first
             merchantBroadcast.send({ type: 'merchant:session-update', payload: { session, card } })
+            
+            // Then send current punch count for this customer if they have any
+            const customerPunches = state.punchLedger.filter(e => e.customerId === message.payload.customerId).length
+            if (customerPunches > 0) {
+              merchantBroadcast.send({
+                type: 'merchant:punch-awarded',
+                payload: {
+                  sessionId: session.id,
+                  cardId: card.id,
+                  customerId: message.payload.customerId,
+                  punchesEarned: customerPunches,
+                  punchesRequired: card.punchesRequired,
+                },
+              })
+            }
             break
           }
           case 'customer:leave': {
