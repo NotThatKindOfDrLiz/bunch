@@ -62,10 +62,16 @@ export const useCustomerStore = (): UseCustomerStoreResult => {
   }, [ensureCustomerId])
 
   const persistState = useCallback((updater: SessionUpdater) => {
-    console.log('[Customer] persistState called with updater:', typeof updater)
     setState((prev) => {
       const next = typeof updater === 'function' ? updater(prev) : updater
-      console.log('[Customer] persistState - prev:', prev, 'next:', next, 'areEqual:', prev === next)
+      // CRITICAL: If updater returns prev unchanged, React won't re-render
+      // We need to ensure we always return a new object reference when state should update
+      if (next && prev && next === prev) {
+        // This shouldn't happen if updater creates new objects, but if it does,
+        // we need to create a new reference to force React to detect the change
+        console.warn('[Customer] persistState - updater returned same reference, forcing new object')
+        return { ...next }
+      }
       if (next) {
         setCustomerSession(next)
         setSessionSnapshot(next.joinCode, next)
@@ -73,7 +79,6 @@ export const useCustomerStore = (): UseCustomerStoreResult => {
         clearCustomerSession()
         deleteSessionSnapshot(prev.joinCode)
       }
-      // Always return a new object reference to ensure React detects the change
       return next
     })
   }, [])
@@ -150,19 +155,27 @@ export const useCustomerStore = (): UseCustomerStoreResult => {
         break
       }
       case 'merchant:punch-sync': {
+        console.log('[Customer] merchant:punch-sync received:', message.payload)
         persistState((prev) => {
-          if (!prev || prev.sessionId !== message.payload.sessionId) return prev
-          if (prev.customerId !== message.payload.customerId) return prev
-          // Only update if the punch count or punchesRequired has changed
-          if (prev.punchesEarned === message.payload.punchesEarned && 
-              prev.punchesRequired === message.payload.punchesRequired) return prev
-          // Always create a new object to ensure React detects the change
-          return {
+          console.log('[Customer] punch-sync - prev:', prev)
+          if (!prev || prev.sessionId !== message.payload.sessionId) {
+            console.log('[Customer] punch-sync - no update (wrong session)')
+            return prev
+          }
+          if (prev.customerId !== message.payload.customerId) {
+            console.log('[Customer] punch-sync - no update (wrong customer)', { prev: prev.customerId, msg: message.payload.customerId })
+            return prev
+          }
+          // Always update to ensure React detects the change, even if values are the same
+          // This fixes the issue where React doesn't re-render when state appears unchanged
+          const updated = {
             ...prev,
             punchesEarned: message.payload.punchesEarned,
             punchesRequired: message.payload.punchesRequired ?? prev.punchesRequired,
             lastUpdatedAt: Date.now(),
           }
+          console.log('[Customer] punch-sync - updating:', { prev: prev.punchesEarned, next: updated.punchesEarned })
+          return updated
         })
         break
       }
