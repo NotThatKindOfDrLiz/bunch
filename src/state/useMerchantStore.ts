@@ -116,9 +116,29 @@ export const useMerchantStore = (): UseMerchantStoreResult => {
               if (session) {
                 // Get pending purchases from state (already loaded)
                 const pending = state.pendingPurchases.filter(p => !p.redeemedAt && p.sessionId === session.id)
-                console.log('[Merchant] Available pending purchases:', pending.map(p => ({ nonce: p.nonce, expiresAt: new Date(p.expiresAt).toLocaleTimeString() })))
+                console.log('[Merchant] Available pending purchases:', pending.map(p => ({ nonce: p.nonce, expiresAt: new Date(p.expiresAt).toLocaleTimeString(), expired: p.expiresAt < Date.now() })))
+                console.log('[Merchant] Customer is claiming nonce:', message.payload.purchaseNonce)
+                console.log('[Merchant] Available nonces:', pending.map(p => p.nonce))
                 if (pending.length === 0) {
                   console.log('[Merchant] No pending purchases! Merchant needs to generate a purchase QR first.')
+                } else {
+                  // Try to find a close match (maybe customer typed it wrong)
+                  const closeMatch = pending.find(p => p.nonce.toLowerCase() === message.payload.purchaseNonce.toLowerCase())
+                  if (closeMatch) {
+                    console.log('[Merchant] Found case-insensitive match! Using:', closeMatch.nonce)
+                    // Use the correct nonce from the database
+                    const correctedPurchase = await getPurchaseNonce(closeMatch.nonce)
+                    if (correctedPurchase) {
+                      await savePurchaseNonce({
+                        ...correctedPurchase,
+                        customerId: message.payload.customerId,
+                        claimedAt: Date.now(),
+                      })
+                      toast('Customer waiting for confirmation', { icon: '👀' })
+                      void refresh()
+                      return
+                    }
+                  }
                 }
               }
               return
