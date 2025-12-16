@@ -317,9 +317,12 @@ export const useMerchantStore = (): UseMerchantStoreResult => {
       const entry = await recordLedgerEntry(purchase, awardCustomerId)
       await savePurchaseNonce({ ...purchase, redeemedAt: Date.now(), customerId: awardCustomerId })
       
-      // Count punches for THIS specific customer
-      const customerPunches = state.punchLedger.filter(e => e.customerId === awardCustomerId).length + 1
+      // Count punches for THIS specific customer (existing + the one we just added)
+      // We need to include the new entry in the count
+      const existingPunches = state.punchLedger.filter(e => e.customerId === awardCustomerId).length
+      const customerPunches = existingPunches + 1
       
+      // Send the punch award message BEFORE refresh so customer gets it immediately
       merchantBroadcast.send({
         type: 'merchant:punch-awarded',
         payload: {

@@ -93,6 +93,8 @@ export const useCustomerStore = (): UseCustomerStoreResult => {
       case 'merchant:punch-awarded': {
         persistState((prev) => {
           if (!prev || prev.sessionId !== message.payload.sessionId) return prev
+          // Only update if this punch is for this customer
+          if (prev.customerId !== message.payload.customerId) return prev
           return {
             ...prev,
             punchesEarned: message.payload.punchesEarned,
