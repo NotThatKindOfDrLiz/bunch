@@ -16,7 +16,7 @@ window.bunchVersion = '0.1.0'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename="/bunch">
       <Routes>
         <Route path="/" element={<Navigate to="/merchant" replace />} />
         <Route path="/merchant" element={<MerchantApp />} />
