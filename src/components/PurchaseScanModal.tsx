@@ -1,5 +1,6 @@
 import type { DialogHTMLAttributes } from 'react'
 import { useMemo } from 'react'
+import toast from 'react-hot-toast'
 import { QRCodeSVG } from 'qrcode.react'
 import type { LoyaltyCard, PurchaseNonce, Session } from '../types'
 
