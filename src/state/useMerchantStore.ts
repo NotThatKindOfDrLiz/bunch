@@ -299,13 +299,17 @@ export const useMerchantStore = (): UseMerchantStoreResult => {
       const awardCustomerId = customerId ?? purchase.customerId ?? 'anonymous'
       const entry = await recordLedgerEntry(purchase, awardCustomerId)
       await savePurchaseNonce({ ...purchase, redeemedAt: Date.now(), customerId: awardCustomerId })
+      
+      // Count punches for THIS specific customer
+      const customerPunches = state.punchLedger.filter(e => e.customerId === awardCustomerId).length + 1
+      
       merchantBroadcast.send({
         type: 'merchant:punch-awarded',
         payload: {
           sessionId: entry.sessionId,
           cardId: entry.cardId,
           customerId: entry.customerId,
-          punchesEarned: state.punchLedger.length + 1,
+          punchesEarned: customerPunches,
           punchesRequired: card.punchesRequired,
         },
       })
