@@ -18,16 +18,18 @@ export const SessionJoinCard = ({ onJoin }: SessionJoinCardProps) => {
       toast.error('Not a session QR')
       return
     }
+    // Always use the card data from the QR code, not any cached data
     const snapshot: SessionSnapshot = {
       sessionId: parsed.sessionId,
       cardId: parsed.card.id,
       cardTitle: parsed.card.title,
-      punchesRequired: parsed.card.punchesRequired,
+      punchesRequired: parsed.card.punchesRequired, // Use the value from QR
       minSats: parsed.card.minSats,
       demoMode: parsed.demoMode,
       joinCode: parsed.joinCode,
       issuedAt: Date.now(),
     }
+    console.log('Joining session with punchesRequired:', snapshot.punchesRequired) // Debug log
     onJoin(snapshot)
   }
 

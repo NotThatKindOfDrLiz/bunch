@@ -77,17 +77,20 @@ export const useCustomerStore = (): UseCustomerStoreResult => {
       case 'merchant:session-update': {
         persistState((prev) => {
           if (!prev || prev.sessionId !== message.payload.session.id) return prev
-          return {
+          // Always update punchesRequired from the merchant's current card data
+          const updated = {
             ...prev,
             sessionId: message.payload.session.id,
             cardId: message.payload.card.id,
             cardTitle: message.payload.card.title,
-            punchesRequired: message.payload.card.punchesRequired,
+            punchesRequired: message.payload.card.punchesRequired, // Use merchant's current card
             minSats: message.payload.card.minSats,
             demoMode: message.payload.session.demoMode,
             joinCode: message.payload.session.joinCode,
             lastUpdatedAt: Date.now(),
           }
+          console.log('Session update received - punchesRequired:', updated.punchesRequired) // Debug
+          return updated
         })
         break
       }
