@@ -62,8 +62,10 @@ export const useCustomerStore = (): UseCustomerStoreResult => {
   }, [ensureCustomerId])
 
   const persistState = useCallback((updater: SessionUpdater) => {
+    console.log('[Customer] persistState called with updater:', typeof updater)
     setState((prev) => {
       const next = typeof updater === 'function' ? updater(prev) : updater
+      console.log('[Customer] persistState - prev:', prev, 'next:', next, 'areEqual:', prev === next)
       if (next) {
         setCustomerSession(next)
         setSessionSnapshot(next.joinCode, next)
@@ -71,6 +73,7 @@ export const useCustomerStore = (): UseCustomerStoreResult => {
         clearCustomerSession()
         deleteSessionSnapshot(prev.joinCode)
       }
+      // Always return a new object reference to ensure React detects the change
       return next
     })
   }, [])
