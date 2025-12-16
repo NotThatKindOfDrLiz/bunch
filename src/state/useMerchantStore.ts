@@ -108,7 +108,18 @@ export const useMerchantStore = (): UseMerchantStoreResult => {
         switch (message.type) {
           case 'customer:purchase-claimed': {
             const purchase = await getPurchaseNonce(message.payload.purchaseNonce)
-            if (!purchase) return
+            if (!purchase) {
+              console.log('[Merchant] customer:purchase-claimed - purchase not found:', message.payload.purchaseNonce)
+              return
+            }
+            // Only update if not already claimed by this customer
+            if (purchase.customerId && purchase.customerId !== message.payload.customerId) {
+              console.log('[Merchant] customer:purchase-claimed - already claimed by different customer')
+              return
+            }
+            if (!purchase.customerId) {
+              console.log('[Merchant] customer:purchase-claimed - claiming purchase:', message.payload.purchaseNonce, 'for customer:', message.payload.customerId)
+            }
             await savePurchaseNonce({
               ...purchase,
               customerId: message.payload.customerId,

@@ -214,14 +214,29 @@ export const useCustomerStore = (): UseCustomerStoreResult => {
 
   // Poll for punch updates every 2 seconds when in a session
   // This works across devices since it sends a sync request
+  // Also send any pending purchase claims that haven't been confirmed yet
   useInterval(() => {
     if (!state) return
+    // Send sync request
     sendToMerchant.send({
       type: 'customer:sync-request',
       payload: {
         sessionId: state.sessionId,
         customerId: state.customerId,
       },
+    })
+    // Also re-send any pending purchase claims (for cross-device scenarios)
+    // This ensures the merchant receives the claim even if BroadcastChannel doesn't work
+    state.purchaseNonces.forEach((nonce) => {
+      sendToMerchant.send({
+        type: 'customer:purchase-claimed',
+        payload: {
+          sessionId: state.sessionId,
+          cardId: state.cardId,
+          customerId: state.customerId,
+          purchaseNonce: nonce,
+        },
+      })
     })
   }, state ? 2000 : null)
 
