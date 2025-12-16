@@ -1,6 +1,6 @@
 # Bunch – Bitcoin Loyalty Punch Cards
 
-Bunch is adrop-in loyalty layer for Bitcoin-accepting merchants. It tracks punches locally alongside existing payment flows, without touching invoices or custody. Made for the btc++ Taipei hackathon.
+Bunch is a drop-in loyalty layer for Bitcoin-accepting merchants. It tracks punches locally alongside existing payment flows, without touching invoices or custody. Made for the btc++ Taipei hackathon.
 
 ## Architecture highlights
 
