@@ -357,7 +357,14 @@ export const useMerchantStore = (): UseMerchantStoreResult => {
       }
       const card = await getCard()
       if (!card) return
-      const awardCustomerId = customerId ?? purchase.customerId ?? 'anonymous'
+      // Use the customerId from the purchase if it was claimed, otherwise we can't award it
+      // If purchase wasn't claimed, we need to wait for customer to claim it first
+      const awardCustomerId = customerId ?? purchase.customerId
+      if (!awardCustomerId) {
+        toast.error('Purchase not claimed by customer yet. Customer must scan/enter code first.')
+        return
+      }
+      
       console.log('[Merchant] markPaid - awardCustomerId:', awardCustomerId, 'purchase.customerId:', purchase.customerId)
       const entry = await recordLedgerEntry(purchase, awardCustomerId)
       console.log('[Merchant] markPaid - created entry:', entry)
