@@ -214,10 +214,30 @@ export const useMerchantStore = (): UseMerchantStoreResult => {
         lastUpdatedAt: Date.now(),
       }
       await saveCard(updated)
+      
+      // If there's an active session, update the session snapshot with new card data
+      if (state.session) {
+        const card = await getCard()
+        if (card) {
+          setSessionSnapshot(state.session.joinCode, {
+            sessionId: state.session.id,
+            cardId: card.id,
+            cardTitle: card.title,
+            punchesRequired: card.punchesRequired,
+            minSats: card.minSats,
+            demoMode: state.session.demoMode,
+            joinCode: state.session.joinCode,
+            issuedAt: Date.now(),
+          })
+          // Send updated card data to all customers
+          merchantBroadcast.send({ type: 'merchant:session-update', payload: { session: state.session, card } })
+        }
+      }
+      
       toast.success('Card updated')
       void refresh()
     },
-    [state.card, refresh],
+    [state.card, state.session, merchantBroadcast, refresh],
   )
 
   const deleteCardAction = useCallback(async () => {
