@@ -12,11 +12,17 @@
       var l = window.location;
       var basePath = '/bunch';
       
-      // Get the path after the base path
-      var pathname = l.pathname;
+      // Get the path after the base path, handling double slashes
+      var pathname = l.pathname.replace(/\/+/g, '/'); // Normalize double slashes
       var pathAfterBase = pathname.startsWith(basePath) 
         ? pathname.slice(basePath.length) || '/' 
         : pathname;
+      
+      // Ensure path starts with / and doesn't have double slashes
+      if (!pathAfterBase.startsWith('/')) {
+        pathAfterBase = '/' + pathAfterBase;
+      }
+      pathAfterBase = pathAfterBase.replace(/\/+/g, '/');
       
       // Build redirect URL
       var redirectPath = basePath + '/?/' + 

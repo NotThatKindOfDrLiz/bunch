@@ -22,7 +22,10 @@ if (window.location.search.includes('?/')) {
   if (pathMatch) {
     const path = pathMatch[1].replace(/~and~/g, '&')
     const newPath = path.startsWith('/') ? path : '/' + path
-    window.history.replaceState({}, '', `${import.meta.env.BASE_URL}${newPath}`)
+    const baseUrl = import.meta.env.BASE_URL.endsWith('/') 
+      ? import.meta.env.BASE_URL.slice(0, -1) 
+      : import.meta.env.BASE_URL
+    window.history.replaceState({}, '', `${baseUrl}${newPath}`)
   }
 }
 
