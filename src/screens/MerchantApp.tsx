@@ -84,7 +84,10 @@ export const MerchantApp = () => {
           )}
           <button
             className="px-5 py-2.5 rounded-full bg-black text-white text-sm font-bold shadow-md hover:bg-black/90 hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-200"
-            onClick={() => window.open(`${import.meta.env.BASE_URL}customer`, '_blank')}
+            onClick={() => {
+              const baseUrl = import.meta.env.BASE_URL.replace(/\/$/, '')
+              window.open(`${baseUrl}/customer`, '_blank')
+            }}
           >
             Open customer view
           </button>
