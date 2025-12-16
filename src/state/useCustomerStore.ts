@@ -42,6 +42,11 @@ const PERSISTED_PROGRESS_KEY = 'bunch:customer-progress'
 
 export const useCustomerStore = (): UseCustomerStoreResult => {
   const [state, setState] = useState<CustomerSessionState | null>(() => getCustomerSession())
+  
+  // Debug: Log state changes
+  useEffect(() => {
+    console.log('[Customer] State changed:', state)
+  }, [state])
 
   const ensureCustomerId = useCallback(() => {
     let id = getCustomerId()
@@ -95,10 +100,18 @@ export const useCustomerStore = (): UseCustomerStoreResult => {
         break
       }
       case 'merchant:punch-awarded': {
+        console.log('[Customer] merchant:punch-awarded received:', message.payload)
         persistState((prev) => {
-          if (!prev || prev.sessionId !== message.payload.sessionId) return prev
+          console.log('[Customer] Current state:', prev)
+          if (!prev || prev.sessionId !== message.payload.sessionId) {
+            console.log('[Customer] No update - wrong session or no state')
+            return prev
+          }
           // Only update if this punch is for this customer
-          if (prev.customerId !== message.payload.customerId) return prev
+          if (prev.customerId !== message.payload.customerId) {
+            console.log('[Customer] No update - wrong customerId', { prev: prev.customerId, msg: message.payload.customerId })
+            return prev
+          }
           // Always create a new object to ensure React detects the change
           const updated = {
             ...prev,
@@ -106,6 +119,7 @@ export const useCustomerStore = (): UseCustomerStoreResult => {
             punchesRequired: message.payload.punchesRequired ?? prev.punchesRequired,
             lastUpdatedAt: Date.now(),
           }
+          console.log('[Customer] Updating state - punchesEarned:', updated.punchesEarned, 'prev:', prev.punchesEarned)
           // Force state update even if values appear the same (React needs new reference)
           return updated
         })

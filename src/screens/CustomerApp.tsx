@@ -15,10 +15,12 @@ export const CustomerApp = () => {
 
   const progress = useMemo(() => {
     if (!state) return { ratio: 0, punchesEarned: 0 }
-    return {
+    const result = {
       ratio: Math.min(1, state.punchesEarned / state.punchesRequired),
       punchesEarned: state.punchesEarned,
     }
+    console.log('[CustomerApp] progress calculated:', result, 'state:', state)
+    return result
   }, [state])
 
   const handlePayload = (payload: unknown) => {
