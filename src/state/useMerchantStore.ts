@@ -105,6 +105,7 @@ export const useMerchantStore = (): UseMerchantStoreResult => {
     CUSTOMER_CHANNEL,
     useCallback(
       async (message) => {
+        console.log('[Merchant] Received message from customer:', message.type, message)
         switch (message.type) {
           case 'customer:purchase-claimed': {
             const purchase = await getPurchaseNonce(message.payload.purchaseNonce)
