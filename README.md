@@ -1,61 +1,6 @@
 # Bunch – Bitcoin Loyalty Punch Cards
 
-Bunch is a hackathon-ready, drop-in loyalty layer for Bitcoin-accepting merchants. It tracks punches locally alongside existing payment flows, without touching invoices or custody. The goal: _fewest steps, high demo reliability, and a clear mental model for non-technical judges_.
-
-## Quickstart
-
-```bash
-pnpm install
-pnpm dev
-```
-
-Then open:
-- `http://localhost:5173/merchant` for the POS kiosk view
-- `http://localhost:5173/customer` for the customer handset view (best in mobile simulator)
-
-All data lives in the browser (IndexedDB + localStorage). Clearing browser storage resets everything.
-
-## 🎯 Ready to Demo?
-
-**→ Start with [`START_HERE.md`](START_HERE.md)** - Complete demo preparation guide
-
-### Demo Documentation:
-- **[START_HERE.md](START_HERE.md)** - Your starting point
-- **[DEMO_README.md](DEMO_README.md)** - Complete overview
-- **[DEMO_SCRIPT.md](DEMO_SCRIPT.md)** - 60-90 second walkthrough
-- **[DEMO_CHEATSHEET.md](DEMO_CHEATSHEET.md)** - Quick reference (PRINT THIS!)
-- **[DEMO_SETUP.md](DEMO_SETUP.md)** - Phone setup & troubleshooting
-- **[JUDGE_HANDOUT.md](JUDGE_HANDOUT.md)** - Give to judges (PRINT THIS!)
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** - Technical deep-dive
-- **[COMMANDS.md](COMMANDS.md)** - All useful commands
-
-## 60-second demo walkthrough
-
-1. **Merchant sets up**
-   - Visit `/merchant`
-   - Tap **Create card** (e.g. “Buy 5 Get 1”, min sats 1000)
-   - Start a **Demo session** (demo payments ON by default)
-   - Join code + QR appear instantly
-
-2. **Customer joins**
-   - On another device/tab open `/customer`
-   - Tap **Scan join QR** (or enter the short code)
-   - UI confirms “Bunch does not handle payments. Bunch tracks rewards after payment.”
-
-3. **Record a purchase**
-   - Merchant taps **New purchase** → purchase QR pops up
-   - Customer taps **Scan purchase QR** → waits “Waiting for merchant…“
-   - Merchant taps **Mark paid** (demo success) → punch awarded on both screens
-
-4. **Redeem reward**
-   - Repeat until punches ≥ requirement
-   - Customer taps **Redeem reward** → merchant sees request → taps **Confirm redemption**
-   - Punch card resets
-
-5. **End session**
-   - Merchant taps **End session** to clear pending nonces, ledger, and requests
-
-_No Bitcoin node, invoices, or wallets are required in demo mode, but the flows map directly to real payments._
+Bunch is adrop-in loyalty layer for Bitcoin-accepting merchants. It tracks punches locally alongside existing payment flows, without touching invoices or custody. Made for the btc++ Taipei hackathon.
 
 ## Architecture highlights
 
@@ -100,11 +45,3 @@ _No Bitcoin node, invoices, or wallets are required in demo mode, but the flows 
 - No invoice creation or wallet custody
 - No Nostr publishing in the MVP
 - No backend servers—everything runs in the browser
-
-## Screenshots
-
-_Add screenshots or GIFs here if desired for the demo._
-
----
-
-Built for a hackathon: fast to understand, easy to demo, and ready to extend.
