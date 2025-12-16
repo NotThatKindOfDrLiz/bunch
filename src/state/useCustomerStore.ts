@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { nanoid } from 'nanoid'
 import toast from 'react-hot-toast'
 import { useBroadcastChannel } from '../hooks/useBroadcastChannel'
+import { useInterval } from '../hooks/useInterval'
 import type {
   CustomerSessionState,
   CustomerToMerchantMessage,
@@ -124,6 +125,20 @@ export const useCustomerStore = (): UseCustomerStoreResult => {
         persistState(null)
         break
       }
+      case 'merchant:punch-sync': {
+        persistState((prev) => {
+          if (!prev || prev.sessionId !== message.payload.sessionId) return prev
+          if (prev.customerId !== message.payload.customerId) return prev
+          // Only update if the punch count has changed
+          if (prev.punchesEarned === message.payload.punchesEarned) return prev
+          return {
+            ...prev,
+            punchesEarned: message.payload.punchesEarned,
+            lastUpdatedAt: Date.now(),
+          }
+        })
+        break
+      }
     }
   })
 
@@ -156,6 +171,19 @@ export const useCustomerStore = (): UseCustomerStoreResult => {
       }),
     )
   }, [state])
+
+  // Poll for punch updates every 2 seconds when in a session
+  // This works across devices since it sends a sync request
+  useInterval(() => {
+    if (!state) return
+    sendToMerchant.send({
+      type: 'customer:sync-request',
+      payload: {
+        sessionId: state.sessionId,
+        customerId: state.customerId,
+      },
+    })
+  }, state ? 2000 : null)
 
   const joinSessionViaSnapshot = useCallback(
     async (snapshot: SessionSnapshot) => {

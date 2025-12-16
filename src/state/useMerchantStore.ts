@@ -161,6 +161,25 @@ export const useMerchantStore = (): UseMerchantStoreResult => {
             toast('Customer left session', { icon: '👋' })
             break
           }
+          case 'customer:sync-request': {
+            const session = await getSession()
+            const card = await getCard()
+            if (!session || !card) return
+            if (session.id !== message.payload.sessionId) return
+            
+            // Send current punch count for this customer
+            const customerPunches = state.punchLedger.filter(e => e.customerId === message.payload.customerId).length
+            merchantBroadcast.send({
+              type: 'merchant:punch-sync',
+              payload: {
+                sessionId: session.id,
+                customerId: message.payload.customerId,
+                punchesEarned: customerPunches,
+                punchesRequired: card.punchesRequired,
+              },
+            })
+            break
+          }
           default:
             break
         }

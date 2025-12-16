@@ -109,6 +109,15 @@ export type MerchantToCustomerMessage =
       type: 'merchant:session-ended'
       payload: { sessionId: UUID }
     }
+  | {
+      type: 'merchant:punch-sync'
+      payload: {
+        sessionId: UUID
+        customerId: UUID
+        punchesEarned: number
+        punchesRequired: number
+      }
+    }
 
 export type CustomerToMerchantMessage =
   | {
@@ -139,6 +148,13 @@ export type CustomerToMerchantMessage =
     }
   | {
       type: 'customer:leave'
+      payload: {
+        sessionId: UUID
+        customerId: UUID
+      }
+    }
+  | {
+      type: 'customer:sync-request'
       payload: {
         sessionId: UUID
         customerId: UUID
