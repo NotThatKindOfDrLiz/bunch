@@ -37,15 +37,17 @@ export const PurchaseScanModal = ({ open, onOpenChange, purchase, card, session 
         <div className="bg-gradient-to-br from-brand-cream to-brand-cream/50 p-4 rounded-2xl border border-black/5 shadow-sm">
           <QRCodeSVG value={JSON.stringify(payload)} size={260} className="mx-auto" />
         </div>
-        <div className="bg-brand-cream/50 rounded-2xl p-4 border border-black/5">
-          <p className="text-xs uppercase tracking-wider text-black/50 font-semibold mb-2">Purchase Code</p>
-          <p className="text-2xl font-mono tracking-wider text-center font-bold text-brand-charcoal break-all">
-            {purchase.nonce}
-          </p>
-          <p className="text-xs text-black/50 mt-2 text-center">
-            Customer can enter this code manually if they can't scan
-          </p>
-        </div>
+        {purchase && (
+          <div className="bg-brand-cream/50 rounded-2xl p-4 border border-black/5">
+            <p className="text-xs uppercase tracking-wider text-black/50 font-semibold mb-2">Purchase Code</p>
+            <p className="text-2xl font-mono tracking-wider text-center font-bold text-brand-charcoal break-all">
+              {purchase.nonce}
+            </p>
+            <p className="text-xs text-black/50 mt-2 text-center">
+              Customer can enter this code manually if they can't scan
+            </p>
+          </div>
+        )}
         <p className="text-xs text-black/50 leading-relaxed">
           QR includes the punch card ID, single-use nonce, and minimum sats. Expires automatically in 10 minutes.
         </p>
