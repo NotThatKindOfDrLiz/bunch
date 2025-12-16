@@ -2,31 +2,34 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/bunch/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Bunch – Bitcoin Loyalty Punch Cards</title>
     <script>
-      // Single Page Apps for GitHub Pages
-      // https://github.com/rafgraph/spa-github-pages
-      // This handles the base path /bunch/
+      // GitHub Pages SPA redirect
+      // When GitHub Pages serves 404.html, redirect to index.html with path
       var pathSegmentsToKeep = 1;
       var l = window.location;
       var basePath = '/bunch';
       
-      // Extract the path after /bunch/
-      var pathAfterBase = l.pathname.replace(basePath, '') || '/';
+      // Get the path after the base path
+      var pathname = l.pathname;
+      var pathAfterBase = pathname.startsWith(basePath) 
+        ? pathname.slice(basePath.length) || '/' 
+        : pathname;
       
-      // Redirect to index.html with the path as a query parameter
-      l.replace(
-        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
-        basePath + '/?/' +
+      // Build redirect URL
+      var redirectPath = basePath + '/?/' + 
         pathAfterBase.slice(1).replace(/&/g, '~and~') +
         (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
-        l.hash
-      );
+        l.hash;
+      
+      // Redirect immediately
+      window.location.replace(redirectPath);
     </script>
   </head>
   <body>
-    Redirecting...
+    <p>Redirecting...</p>
   </body>
 </html>
 

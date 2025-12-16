@@ -15,9 +15,15 @@ declare global {
 window.bunchVersion = '0.1.0'
 
 // Handle GitHub Pages 404 redirect
+// When 404.html redirects here with ?/path, extract and navigate
 if (window.location.search.includes('?/')) {
-  const path = window.location.search.replace('?/', '').replace(/~and~/g, '&')
-  window.history.replaceState({}, '', `${import.meta.env.BASE_URL}${path}`)
+  const search = window.location.search
+  const pathMatch = search.match(/\?\/+(.+?)(?:&|$)/)
+  if (pathMatch) {
+    const path = pathMatch[1].replace(/~and~/g, '&')
+    const newPath = path.startsWith('/') ? path : '/' + path
+    window.history.replaceState({}, '', `${import.meta.env.BASE_URL}${newPath}`)
+  }
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
