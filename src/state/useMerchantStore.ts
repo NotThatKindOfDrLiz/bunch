@@ -110,6 +110,16 @@ export const useMerchantStore = (): UseMerchantStoreResult => {
             const purchase = await getPurchaseNonce(message.payload.purchaseNonce)
             if (!purchase) {
               console.log('[Merchant] customer:purchase-claimed - purchase not found:', message.payload.purchaseNonce)
+              // Get all pending purchases to help debug
+              const session = await getSession()
+              if (session) {
+                // Get pending purchases from state (already loaded)
+                const pending = state.pendingPurchases.filter(p => !p.redeemedAt && p.sessionId === session.id)
+                console.log('[Merchant] Available pending purchases:', pending.map(p => ({ nonce: p.nonce, expiresAt: new Date(p.expiresAt).toLocaleTimeString() })))
+                if (pending.length === 0) {
+                  console.log('[Merchant] No pending purchases! Merchant needs to generate a purchase QR first.')
+                }
+              }
               return
             }
             // Only update if not already claimed by this customer
