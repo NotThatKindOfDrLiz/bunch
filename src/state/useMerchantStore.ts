@@ -172,6 +172,8 @@ export const useMerchantStore = (): UseMerchantStoreResult => {
             // Get fresh ledger entries from IndexedDB to ensure accurate count
             const allLedgerEntries = await getLedgerEntries()
             const customerPunches = allLedgerEntries.filter(e => e.customerId === message.payload.customerId).length
+            console.log('[Merchant] customer:sync-request - customerId:', message.payload.customerId, 'allEntries:', allLedgerEntries.length, 'customerPunches:', customerPunches)
+            console.log('[Merchant] Filtered entries:', allLedgerEntries.filter(e => e.customerId === message.payload.customerId))
             merchantBroadcast.send({
               type: 'merchant:punch-sync',
               payload: {
@@ -356,12 +358,16 @@ export const useMerchantStore = (): UseMerchantStoreResult => {
       const card = await getCard()
       if (!card) return
       const awardCustomerId = customerId ?? purchase.customerId ?? 'anonymous'
+      console.log('[Merchant] markPaid - awardCustomerId:', awardCustomerId, 'purchase.customerId:', purchase.customerId)
       const entry = await recordLedgerEntry(purchase, awardCustomerId)
+      console.log('[Merchant] markPaid - created entry:', entry)
       await savePurchaseNonce({ ...purchase, redeemedAt: Date.now(), customerId: awardCustomerId })
       
       // Get fresh ledger entries from IndexedDB to ensure accurate count
       const allLedgerEntries = await getLedgerEntries()
       const customerPunches = allLedgerEntries.filter(e => e.customerId === awardCustomerId).length
+      console.log('[Merchant] markPaid - allEntries:', allLedgerEntries.length, 'customerPunches:', customerPunches)
+      console.log('[Merchant] markPaid - filtered entries:', allLedgerEntries.filter(e => e.customerId === awardCustomerId))
       
       // Send the punch award message BEFORE refresh so customer gets it immediately
       merchantBroadcast.send({
@@ -374,6 +380,7 @@ export const useMerchantStore = (): UseMerchantStoreResult => {
           punchesRequired: card.punchesRequired,
         },
       })
+      console.log('[Merchant] markPaid - sent punch-awarded:', { customerId: entry.customerId, punchesEarned: customerPunches })
       toast.success('Punch awarded')
       void refresh()
     },
