@@ -3,13 +3,13 @@
  * This handles both GitHub Pages (/bunch/) and root deployments (/)
  */
 export function getBaseUrl(): string {
-  const base = import.meta.env.BASE_URL
+  const base = import.meta.env.BASE_URL || './'
   // For relative base like './', return empty string
   if (base === './' || base === '.') {
     return ''
   }
   // Ensure base ends with / but not double //
-  return base.endsWith('/') ? base.slice(0, -1) : base
+  return base?.endsWith('/') ? base.slice(0, -1) : base
 }
 
 /**
