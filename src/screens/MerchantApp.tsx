@@ -62,7 +62,7 @@ export const MerchantApp = () => {
     <div className="min-h-screen bg-brand-cream text-brand-charcoal">
       <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 px-6 py-5 border-b border-black/10 bg-white/50 backdrop-blur-sm">
         <div className="flex items-center gap-4">
-          <img src={`${import.meta.env.BASE_URL}logo-name.png`} alt="Bunch" className="h-10 md:h-12" />
+          <img src="/logo-name.png" alt="Bunch" className="h-10 md:h-12" />
           <div className="border-l border-black/20 pl-4">
             <h2 className="text-xl font-bold tracking-tight">Merchant</h2>
             <p className="text-xs text-black/70 font-medium">Drop-in Bitcoin loyalty punch cards</p>
@@ -85,10 +85,7 @@ export const MerchantApp = () => {
           <button
             className="px-5 py-2.5 rounded-full bg-black text-white text-sm font-bold shadow-md hover:bg-black/90 hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-200"
             onClick={() => {
-              const baseUrl = import.meta.env.BASE_URL.endsWith('/') 
-                ? import.meta.env.BASE_URL.slice(0, -1) 
-                : import.meta.env.BASE_URL
-              window.open(`${baseUrl}/customer`, '_blank')
+              window.open('/customer', '_blank')
             }}
           >
             Open customer view
