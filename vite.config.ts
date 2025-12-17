@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/bunch/',
+  base: './',
   plugins: [react()],
   server: {
     host: true, // Listen on all network interfaces (allows phone access)
