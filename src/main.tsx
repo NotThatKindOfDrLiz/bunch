@@ -14,24 +14,16 @@ declare global {
 
 window.bunchVersion = '0.1.0'
 
-// Handle GitHub Pages 404 redirect
-// When 404.html redirects here with ?/path, extract and navigate
-if (window.location.search.includes('?/')) {
-  const search = window.location.search
-  const pathMatch = search.match(/\?\/+(.+?)(?:&|$)/)
-  if (pathMatch) {
-    const path = pathMatch[1].replace(/~and~/g, '&')
-    const newPath = path.startsWith('/') ? path : '/' + path
-    const baseUrl = import.meta.env.BASE_URL.endsWith('/') 
-      ? import.meta.env.BASE_URL.slice(0, -1) 
-      : import.meta.env.BASE_URL
-    window.history.replaceState({}, '', `${baseUrl}${newPath}`)
-  }
+// Handle 404 redirect for client-side routing
+const redirectPath = sessionStorage.getItem('redirectPath')
+if (redirectPath) {
+  sessionStorage.removeItem('redirectPath')
+  window.history.replaceState({}, '', redirectPath)
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <BrowserRouter basename="/bunch">
+    <BrowserRouter>
       <Routes>
         <Route path="/" element={<Navigate to="/merchant" replace />} />
         <Route path="/merchant" element={<MerchantApp />} />

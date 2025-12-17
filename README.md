@@ -1,5 +1,7 @@
 # Bunch – Bitcoin Loyalty Punch Cards
 
+[![Edit with Shakespeare](https://shakespeare.diy/badge.svg)](https://shakespeare.diy/clone?url=https%3A%2F%2Fgithub.com%2FNotThatKindOfDrLiz%2Fbunch.git)
+
 Bunch is a drop-in loyalty layer for Bitcoin-accepting merchants. It tracks punches locally alongside existing payment flows, without touching invoices or custody. Made for the btc++ Taipei hackathon.
 
 ## Architecture highlights
@@ -45,7 +47,7 @@ When a payment is confirmed in BTCPay Server or LNbits, send a webhook to your b
 // Backend webhook handler (Node.js example)
 app.post('/webhooks/btcpay', async (req, res) => {
   const { invoiceId, status, metadata } = req.body
-  
+
   if (status === 'paid' && metadata.purchaseNonce) {
     // Notify merchant's Bunch instance via WebSocket or Server-Sent Events
     notifyMerchant({
@@ -55,7 +57,7 @@ app.post('/webhooks/btcpay', async (req, res) => {
       amount: req.body.amount
     })
   }
-  
+
   res.status(200).send('OK')
 })
 ```
@@ -81,12 +83,12 @@ Merchant's Bunch instance polls payment system API to check invoice status:
 const checkPaymentStatus = async (purchaseNonce: string) => {
   // Get invoice ID from purchase nonce metadata
   const invoiceId = await getInvoiceIdForNonce(purchaseNonce)
-  
+
   // Poll BTCPay Server API
   const invoice = await fetch(`https://your-btcpay-server.com/api/invoices/${invoiceId}`, {
     headers: { 'Authorization': `token ${BTCPAY_API_KEY}` }
   }).then(r => r.json())
-  
+
   if (invoice.status === 'paid') {
     await markPaid(purchaseNonce, { amount: invoice.amount })
   }
@@ -123,7 +125,7 @@ const invoice = await btcpay.createInvoice({
 // 2. Webhook receives payment confirmation
 btcpay.on('invoice.paid', async (invoice) => {
   const { purchaseNonce } = invoice.metadata
-  
+
   // 3. Verify and award punch
   if (await verifyPurchaseNonce(purchaseNonce)) {
     await merchantStore.markPaid(purchaseNonce, {
