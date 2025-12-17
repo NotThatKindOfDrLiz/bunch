@@ -2,11 +2,11 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 // https://vite.dev/config/
-export default defineConfig({
-  base: './',
+export default defineConfig(({ mode }) => ({
+  base: mode === 'github' ? '/bunch/' : './',
   plugins: [react()],
   server: {
     host: true, // Listen on all network interfaces (allows phone access)
     port: 5173,
   },
-})
+}))

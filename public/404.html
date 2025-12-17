@@ -7,8 +7,24 @@
     <title>Bunch – Bitcoin Loyalty Punch Cards</title>
     <script>
       // SPA redirect for client-side routing
-      sessionStorage.setItem('redirectPath', window.location.pathname + window.location.search + window.location.hash);
-      window.location.replace('/');
+      // Works for both root (/) and GitHub Pages (/bunch/) deployments
+      var l = window.location;
+      var pathSegments = l.pathname.split('/').filter(Boolean);
+
+      // Check if we're on GitHub Pages (has /bunch/ prefix)
+      var isGitHubPages = pathSegments[0] === 'bunch';
+      var basePath = isGitHubPages ? '/bunch' : '';
+
+      // Get the path after base
+      var pathAfterBase = isGitHubPages
+        ? '/' + pathSegments.slice(1).join('/')
+        : l.pathname;
+
+      // Store for React Router to handle
+      sessionStorage.setItem('redirectPath', pathAfterBase + l.search + l.hash);
+
+      // Redirect to index
+      window.location.replace(basePath + '/');
     </script>
   </head>
   <body>

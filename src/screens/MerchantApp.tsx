@@ -9,6 +9,7 @@ import { CardStats } from '../components/CardStats'
 import { EmptyStateCard } from '../components/EmptyStateCard'
 import { SessionCard } from '../components/SessionCard'
 import { MerchantStatusPanel } from '../components/MerchantStatusPanel'
+import { getAssetPath, getRoutePath } from '../utils/paths'
 
 export const MerchantApp = () => {
   const {
@@ -62,7 +63,7 @@ export const MerchantApp = () => {
     <div className="min-h-screen bg-brand-cream text-brand-charcoal">
       <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 px-6 py-5 border-b border-black/10 bg-white/50 backdrop-blur-sm">
         <div className="flex items-center gap-4">
-          <img src="/logo-name.png" alt="Bunch" className="h-10 md:h-12" />
+          <img src={getAssetPath('logo-name.png')} alt="Bunch" className="h-10 md:h-12" />
           <div className="border-l border-black/20 pl-4">
             <h2 className="text-xl font-bold tracking-tight">Merchant</h2>
             <p className="text-xs text-black/70 font-medium">Drop-in Bitcoin loyalty punch cards</p>
@@ -85,7 +86,7 @@ export const MerchantApp = () => {
           <button
             className="px-5 py-2.5 rounded-full bg-black text-white text-sm font-bold shadow-md hover:bg-black/90 hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-200"
             onClick={() => {
-              window.open('/customer', '_blank')
+              window.open(getRoutePath('/customer'), '_blank')
             }}
           >
             Open customer view
