@@ -28,7 +28,6 @@ export const MerchantApp = () => {
     toggleDemoMode,
     btcpayConfig,
     setBTCPayConfig,
-    verifyBTCPayConnection,
   } = useMerchantStore()
 
   const [showPurchaseModal, setShowPurchaseModal] = useState(false)

@@ -11,7 +11,7 @@ export const QRCodeScanner = ({ onDecode }: QRCodeScannerProps) => {
   const [cameraSupported, setCameraSupported] = useState(true)
   const [isScanning, setIsScanning] = useState(false)
   const lastScannedRef = useRef<string>('')
-  const scanTimeoutRef = useRef<NodeJS.Timeout>()
+  const scanTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   useEffect(() => {
     // Check camera support

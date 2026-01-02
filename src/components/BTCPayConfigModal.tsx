@@ -14,7 +14,6 @@ export const BTCPayConfigModal = ({
   onOpenChange,
   currentConfig,
   onSave,
-  onVerify,
 }: BTCPayConfigModalProps) => {
   const [serverUrl, setServerUrl] = useState(currentConfig?.serverUrl || '')
   const [apiKey, setApiKey] = useState(currentConfig?.apiKey || '')
