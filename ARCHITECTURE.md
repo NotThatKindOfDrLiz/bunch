@@ -273,18 +273,33 @@
 
 ## Production Integration Points
 
-### 1. Payment Verification Hook
+### Payment Flow Options
+
+**Mode 1: Manual (Default, Always Available)**
+- Merchant generates purchase QR → Customer scans → Merchant processes payment → Merchant marks paid in Bunch
+- Works with any payment system (BTCPay, LNbits, custom)
+- No configuration needed
+- Merchant has full control
+
+**Mode 2: Automated BTCPay Integration (Optional)**
+- Merchant configures BTCPay Server (optional)
+- Bunch can create invoices in merchant's BTCPay Server
+- Bunch polls payment status and auto-awards punches
+- **Important**: All funds go to merchant's BTCPay Server wallet (Bunch never has custody)
+
+### 1. Payment Verification Hook (Optional BTCPay Integration)
 ```typescript
-// Instead of demo "Mark Paid" button:
+// When BTCPay is configured, Bunch can poll invoice status:
 const verifyPayment = async (nonce: string) => {
   const invoice = await btcpay.getInvoice(nonce)
   if (invoice.status === 'paid') {
     await markPaid(nonce, invoice.buyerInfo)
   }
 }
+// Note: Invoice is in merchant's BTCPay Server, funds go to merchant's wallet
 ```
 
-### 2. Webhook Listener
+### 2. Webhook Listener (Future Enhancement)
 ```typescript
 // BTCPay webhook endpoint (if you add backend):
 app.post('/webhooks/btcpay', (req, res) => {
@@ -295,6 +310,7 @@ app.post('/webhooks/btcpay', (req, res) => {
     merchantNotify({ type: 'payment-confirmed', nonce: purchaseNonce })
   }
 })
+// Note: Would require backend server (currently browser-only)
 ```
 
 ### 3. Nostr Integration (Future)
@@ -322,7 +338,10 @@ const giftReward = async (recipientNpub: string) => {
 - ✅ 10-minute expiry on purchase QRs
 - ✅ Merchant confirmation required for punches
 - ✅ Session isolation (ledger cleared on end)
-- ✅ No payment data stored (Bunch never sees funds)
+- ✅ **No custody**: Bunch never holds funds—all payments go to merchant's wallet
+- ✅ **No payment processing**: Bunch doesn't process payments—merchants use their own infrastructure
+- ✅ **Optional BTCPay integration**: When enabled, invoices created in merchant's BTCPay Server (merchant's infrastructure)
+- ✅ **Read-only payment status**: Bunch only reads payment status (cannot move funds)
 
 ### Future Enhancements:
 - [ ] Rate limiting on nonce generation

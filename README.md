@@ -1,6 +1,6 @@
 # Bunch – Bitcoin Loyalty Punch Cards
 
-Bunch is a drop-in loyalty layer for Bitcoin-accepting merchants. It tracks punches locally alongside existing payment flows, without touching invoices or custody. Made for the btc++ Taipei hackathon.
+Bunch is a drop-in loyalty layer for Bitcoin-accepting merchants. It tracks punches locally alongside existing payment flows. **Bunch never has custody of funds**—all payments go through the merchant's payment infrastructure. Made for the btc++ Taipei hackathon.
 
 ## Architecture highlights
 
@@ -19,21 +19,55 @@ Bunch is a drop-in loyalty layer for Bitcoin-accepting merchants. It tracks punc
 
 - Merchants define a single punch card template per device
 - Each customer receives a random, per-merchant ID stored locally; no accounts, emails, or phone numbers
-- Payments are simulated; Bunch never mints invoices or holds funds
+- **No custody**: Bunch never holds funds—all payments go to the merchant's wallet
 - Redemption requires explicit merchant confirmation
-- Copy emphasizes boundaries: “Bunch does not handle payments. Bunch tracks rewards after payment.”
+- Copy emphasizes boundaries: "Bunch does not handle payments. Bunch tracks rewards after payment."
 
 ## Integration with Bitcoin POS Systems
 
-Bunch is designed to work alongside existing Bitcoin payment infrastructure like **BTCPay Server**, **LNbits**, or any Lightning/Bitcoin payment system. Bunch never creates invoices or handles payments—it only tracks loyalty rewards after payment confirmation.
+Bunch is designed to work alongside existing Bitcoin payment infrastructure like **BTCPay Server**, **LNbits**, or any Lightning/Bitcoin payment system. **Bunch never has custody of funds**—all payments go directly to the merchant's wallet.
 
-### How It Works
+### Two Operating Modes
 
+#### Mode 1: Manual (Default, Always Available)
+
+**How It Works:**
 1. **Merchant generates purchase QR** → Bunch creates a unique purchase nonce (single-use, 10-minute expiry)
 2. **Customer scans QR** → Customer's device claims the nonce and waits for confirmation
 3. **Payment happens** → Merchant processes payment via their existing POS system (BTCPay, LNbits, etc.)
 4. **Merchant confirms payment** → Merchant marks the purchase as paid in Bunch, awarding the punch
 5. **Customer sees update** → Real-time sync updates customer's progress
+
+**Key Points:**
+- ✅ Works with any payment system
+- ✅ Merchant has full control
+- ✅ No API keys or configuration needed
+- ✅ Perfect for merchants who want to verify each payment manually
+
+#### Mode 2: Automated BTCPay Integration (Optional)
+
+**When enabled**, Bunch can automatically create invoices in your BTCPay Server and track payment status. This is **completely optional** and requires explicit merchant configuration.
+
+**How It Works:**
+1. **Merchant configures BTCPay** → Enters BTCPay Server URL, API key, and Store ID
+2. **Merchant generates purchase QR** → Bunch creates purchase nonce AND automatically creates invoice in merchant's BTCPay Server
+3. **Customer scans QR** → Customer's device claims the nonce
+4. **Customer pays** → Payment goes directly to merchant's BTCPay Server wallet (Bunch never touches funds)
+5. **Bunch tracks payment** → Polls BTCPay Server every 5 seconds to check invoice status
+6. **Auto-award punch** → When invoice is paid, Bunch automatically awards the punch
+
+**Key Points:**
+- ✅ **Still no custody**: All funds go to merchant's BTCPay Server wallet
+- ✅ **Merchant controls everything**: Invoice created in merchant's BTCPay Server using merchant's API key
+- ✅ **Optional convenience**: Reduces manual "mark paid" steps
+- ✅ **Can be disabled**: Switch to Demo Mode or clear BTCPay config to use manual mode
+- ✅ **Manual override always available**: Merchant can still manually mark purchases as paid
+
+**Important Distinction:**
+- Bunch **can create invoices** in the merchant's BTCPay Server (optional automation)
+- Bunch **never has custody** of funds (all payments go to merchant's wallet)
+- Bunch **only reads payment status** (no ability to move funds)
+- This is **merchant's infrastructure** (merchant owns BTCPay Server and all funds)
 
 ### Integration Approaches
 
@@ -144,10 +178,20 @@ btcpay.on('invoice.paid', async (invoice) => {
 
 ### Why This Design?
 
-Bunch intentionally **does not** create invoices or handle payments because:
-- Merchants already have payment infrastructure they trust
-- Reduces attack surface (no payment handling = less risk)
+**Core Principle: No Custody**
+- Bunch **never holds funds**—all payments go directly to the merchant's wallet
+- Bunch **never processes payments**—merchants use their own payment infrastructure
+- Bunch **only tracks loyalty rewards** after payment confirmation
+
+**Optional Automation:**
+- BTCPay integration is **optional**—merchants can use manual mode (default)
+- When enabled, Bunch creates invoices in **merchant's BTCPay Server** (merchant's infrastructure)
+- Merchant maintains **full control**—they own BTCPay Server, API keys, and all funds
+- Bunch only has **read access** to payment status (cannot move funds)
+
+**Benefits:**
 - Works with any Bitcoin payment system (BTCPay, LNbits, custom solutions)
+- Reduces attack surface (no payment handling = less risk)
 - Merchant maintains full control over payment flow
 - Bunch focuses solely on loyalty tracking, not payment processing
 
@@ -170,6 +214,12 @@ Bunch intentionally **does not** create invoices or handle payments because:
 - No user accounts or login
 - No email / phone collection
 - No Stripe or fiat rails
-- No invoice creation or wallet custody
+- **No wallet custody** (Bunch never holds funds—all payments go to merchant's wallet)
 - No Nostr publishing in the MVP
 - No backend servers—everything runs in the browser
+
+**Note on Invoice Creation:**
+- Bunch can optionally create invoices in merchant's BTCPay Server (requires merchant configuration)
+- This is **merchant's infrastructure**—merchant owns BTCPay Server and all funds
+- Bunch never has custody—it only reads payment status to automate punch awards
+- Manual mode (no invoice creation) is always available and is the default

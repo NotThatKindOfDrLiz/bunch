@@ -2,14 +2,29 @@
 
 This document explains how to integrate Bunch with your BTCPay Server instance.
 
+## ⚠️ Important: This Integration is Optional
+
+**BTCPay Server integration is completely optional.** Bunch works perfectly without it using manual mode (the default). This integration is a convenience feature that automates invoice creation and payment tracking, but:
+
+- ✅ **Manual mode always works**—no BTCPay configuration needed
+- ✅ **No custody**—all funds go to your BTCPay Server wallet (Bunch never touches them)
+- ✅ **You control everything**—you own BTCPay Server, API keys, and all funds
+- ✅ **Can be disabled anytime**—switch to Demo Mode or clear BTCPay config
+
 ## Overview
 
-Bunch now supports automatic invoice creation and payment tracking via BTCPay Server. When enabled, Bunch will:
+When BTCPay Server integration is enabled, Bunch can:
 
-1. **Create invoices automatically** when you generate a purchase QR (if Demo Mode is OFF)
-2. **Track invoice status** by polling BTCPay Server every 5 seconds
+1. **Create invoices automatically** in your BTCPay Server when you generate a purchase QR (if Demo Mode is OFF)
+2. **Track invoice status** by polling your BTCPay Server every 5 seconds
 3. **Auto-award punches** when invoices are paid or settled
 4. **Display invoice links** in the merchant interface for easy access
+
+**Key Distinction:**
+- Bunch creates invoices in **your BTCPay Server** (your infrastructure)
+- All payments go to **your BTCPay Server wallet** (Bunch never has custody)
+- Bunch only **reads payment status** (cannot move funds)
+- You maintain **full control** (you own BTCPay Server and API keys)
 
 ## Setup Instructions
 
@@ -45,12 +60,14 @@ You'll need three pieces of information:
 
 ## How It Works
 
-### Purchase Flow with BTCPay
+### Purchase Flow with BTCPay (Optional Automation)
 
 1. **Merchant generates purchase QR**
    - Bunch creates a purchase nonce (unique ID)
-   - If BTCPay is configured and Demo Mode is OFF, Bunch creates a BTCPay invoice
+   - If BTCPay is configured and Demo Mode is OFF, Bunch creates an invoice in **your BTCPay Server**
+   - Invoice is created using **your API key** in **your BTCPay Server**
    - Invoice includes `purchaseNonce` in metadata for tracking
+   - **All funds go to your BTCPay Server wallet** (Bunch never touches them)
 
 2. **Customer scans QR**
    - Customer's device claims the nonce
@@ -58,7 +75,8 @@ You'll need three pieces of information:
 
 3. **Customer pays**
    - Customer pays via BTCPay invoice (Lightning or on-chain)
-   - Bunch polls BTCPay Server every 5 seconds to check status
+   - Payment goes directly to **your BTCPay Server wallet**
+   - Bunch polls your BTCPay Server every 5 seconds to check status (read-only)
 
 4. **Payment confirmed**
    - When invoice status becomes "Paid" or "Settled", Bunch automatically:
@@ -66,12 +84,24 @@ You'll need three pieces of information:
      - Awards the punch to the customer
      - Updates both merchant and customer UIs in real-time
 
-### Manual Override
+### Manual Mode (Default, Always Available)
+
+**Without BTCPay integration**, the flow is:
+1. Merchant generates purchase QR → Bunch creates nonce
+2. Customer scans QR → Claims nonce
+3. Merchant processes payment → Via any payment system (BTCPay, LNbits, etc.)
+4. Merchant marks paid → Clicks "Mark paid" button in Bunch
+5. Punch awarded → Customer sees update
+
+**Manual mode works perfectly** and requires no configuration. BTCPay integration is purely optional automation.
+
+### Manual Override (Even with BTCPay Enabled)
 
 Even with BTCPay enabled, merchants can still manually mark purchases as paid using the **"Mark paid"** button. This is useful for:
 - Testing
 - Handling edge cases
 - Offline payments
+- When you want to verify payment before awarding punch
 
 ## UI Indicators
 
@@ -120,11 +150,19 @@ Your BTCPay API key needs these permissions:
 
 ## Security Notes
 
+### Custody & Control
+- **Bunch never has custody**—all funds go to your BTCPay Server wallet
+- **You control everything**—you own BTCPay Server, API keys, and all funds
+- **Bunch only reads payment status**—cannot move funds or access your wallet
+- **Invoice creation uses your API key**—invoices are created in your BTCPay Server
+
+### API Key Security
 - **API keys are stored in browser localStorage** (not encrypted)
-- **Only use API keys with minimal required permissions**
+- **Only use API keys with minimal required permissions** (`canviewinvoices`, `cancreateinvoice`)
 - **Don't share your merchant view URL** if BTCPay is configured
-- **Consider using a separate API key** for Bunch integration
+- **Consider using a separate API key** for Bunch integration (can be revoked independently)
 - **Clear configuration** if device is shared or compromised
+- **Revoke API key** in BTCPay Server if needed (Bunch will stop working, but funds are safe)
 
 ## Limitations
 
