@@ -30,6 +30,16 @@ import {
 } from '../lib/indexedDb'
 import { useBroadcastChannel } from '../hooks/useBroadcastChannel'
 import { deleteSessionSnapshot, setSessionSnapshot } from '../lib/storage'
+import {
+  createBTCPayInvoice,
+  getBTCPayInvoice,
+  loadBTCPayConfig,
+  saveBTCPayConfig,
+  clearBTCPayConfig,
+  verifyBTCPayConfig,
+  type BTCPayServerConfig,
+} from '../utils/btcpay'
+import { useInterval } from '../hooks/useInterval'
 
 const MERCHANT_CHANNEL = 'bunch:merchant'
 const CUSTOMER_CHANNEL = 'bunch:customer'
@@ -44,6 +54,10 @@ interface UseMerchantStoreResult extends MerchantState {
   markPaid: (nonce: string, customerId?: string) => Promise<void>
   fulfillRedemption: (requestId: string) => Promise<void>
   toggleDemoMode: () => Promise<void>
+  // BTCPay Server integration
+  btcpayConfig: BTCPayServerConfig | null
+  setBTCPayConfig: (config: BTCPayServerConfig | null) => Promise<void>
+  verifyBTCPayConnection: () => Promise<boolean>
 }
 
 const TEN_MINUTES = 10 * 60 * 1000
@@ -75,6 +89,7 @@ export const useMerchantStore = (): UseMerchantStoreResult => {
     punchLedger: [],
     redemptionRequests: [],
   })
+  const [btcpayConfig, setBTCPayConfigState] = useState<BTCPayServerConfig | null>(loadBTCPayConfig())
 
   const refresh = useCallback(async () => {
     const data = await loadMerchantState()
@@ -87,6 +102,12 @@ export const useMerchantStore = (): UseMerchantStoreResult => {
   useEffect(() => {
     void refresh()
   }, [refresh])
+
+  // Load BTCPay config on mount
+  useEffect(() => {
+    const config = loadBTCPayConfig()
+    setBTCPayConfigState(config)
+  }, [])
 
   const merchantBroadcast = useBroadcastChannel<MerchantToCustomerMessage>(
     MERCHANT_CHANNEL,
@@ -379,6 +400,7 @@ export const useMerchantStore = (): UseMerchantStoreResult => {
       toast.error('Start a session first')
       return null
     }
+    
     const nonce: PurchaseNonce = {
       nonce: nanoid(),
       sessionId: session.id,
@@ -387,11 +409,42 @@ export const useMerchantStore = (): UseMerchantStoreResult => {
       createdAt: Date.now(),
       expiresAt: Date.now() + TEN_MINUTES,
     }
+
+    // If BTCPay Server is configured and not in demo mode, create an invoice
+    if (btcpayConfig && !session.demoMode) {
+      try {
+        const invoice = await createBTCPayInvoice(btcpayConfig, {
+          amount: card.minSats,
+          currency: 'SATS',
+          metadata: {
+            purchaseNonce: nonce.nonce,
+            cardId: card.id,
+            sessionId: session.id,
+            cardTitle: card.title,
+          },
+          checkout: {
+            expirationMinutes: 10,
+            monitoringMinutes: 10,
+          },
+        })
+        
+        nonce.btcpayInvoiceId = invoice.id
+        nonce.btcpayCheckoutLink = invoice.checkoutLink
+        nonce.btcpayStatus = invoice.status
+        
+        toast.success('BTCPay invoice created', { icon: '₿' })
+      } catch (error) {
+        console.error('[Merchant] Failed to create BTCPay invoice:', error)
+        toast.error(`BTCPay error: ${error instanceof Error ? error.message : 'Unknown error'}`)
+        // Continue with nonce creation even if invoice fails
+      }
+    }
+    
     await savePurchaseNonce(nonce)
     toast('Purchase QR ready', { icon: '📱' })
     void refresh()
     return nonce
-  }, [refresh])
+  }, [refresh, btcpayConfig])
 
   const recordLedgerEntry = async (
     purchase: PurchaseNonce,
@@ -494,6 +547,73 @@ export const useMerchantStore = (): UseMerchantStoreResult => {
     void refresh()
   }, [merchantBroadcast, refresh])
 
+  // BTCPay Server configuration management
+  const setBTCPayConfig = useCallback(async (config: BTCPayServerConfig | null) => {
+    if (config) {
+      const isValid = await verifyBTCPayConfig(config)
+      if (!isValid) {
+        toast.error('Invalid BTCPay Server configuration. Please check your server URL, API key, and store ID.')
+        return
+      }
+      saveBTCPayConfig(config)
+      setBTCPayConfigState(config)
+      toast.success('BTCPay Server configured successfully')
+    } else {
+      clearBTCPayConfig()
+      setBTCPayConfigState(null)
+      toast('BTCPay Server configuration cleared')
+    }
+  }, [])
+
+  const verifyBTCPayConnection = useCallback(async () => {
+    if (!btcpayConfig) return false
+    return verifyBTCPayConfig(btcpayConfig)
+  }, [btcpayConfig])
+
+  // Poll BTCPay invoices for pending purchases
+  const pollBTCPayInvoices = useCallback(async () => {
+    if (!btcpayConfig || !state.session || state.session.demoMode) return
+    
+    const pendingWithInvoices = state.pendingPurchases.filter(p => p.btcpayInvoiceId && !p.redeemedAt)
+    if (pendingWithInvoices.length === 0) return
+
+    for (const purchase of pendingWithInvoices) {
+      if (!purchase.btcpayInvoiceId) continue
+      
+      try {
+        const invoice = await getBTCPayInvoice(btcpayConfig, purchase.btcpayInvoiceId)
+        
+        // Update purchase with latest invoice status
+        if (purchase.btcpayStatus !== invoice.status) {
+          await savePurchaseNonce({
+            ...purchase,
+            btcpayStatus: invoice.status,
+            btcpayCheckoutLink: invoice.checkoutLink,
+          })
+        }
+        
+        // Auto-mark as paid if invoice is settled or paid
+        if ((invoice.status === 'Settled' || invoice.status === 'Paid') && !purchase.redeemedAt) {
+          const amount = parseFloat(invoice.amount)
+          const card = await getCard()
+          if (card && amount >= card.minSats) {
+            await markPaid(purchase.nonce, purchase.customerId)
+            toast.success(`Invoice ${invoice.id.slice(0, 8)}... paid automatically`, { icon: '₿' })
+          } else if (card) {
+            toast.error(`Invoice amount ${amount} sats is less than minimum ${card.minSats} sats`)
+          }
+        }
+      } catch (error) {
+        console.error(`[Merchant] Failed to poll invoice ${purchase.btcpayInvoiceId}:`, error)
+      }
+    }
+    
+    void refresh()
+  }, [btcpayConfig, state.session, state.pendingPurchases, markPaid, refresh])
+
+  // Poll every 5 seconds for BTCPay invoices
+  useInterval(pollBTCPayInvoices, state.session && !state.session.demoMode && btcpayConfig ? 5000 : null)
+
   useEffect(() => {
     if (!state.session) {
       clearStatusCache()
@@ -519,6 +639,9 @@ export const useMerchantStore = (): UseMerchantStoreResult => {
       markPaid,
       fulfillRedemption,
       toggleDemoMode,
+      btcpayConfig,
+      setBTCPayConfig,
+      verifyBTCPayConnection,
     }),
     [
       state,
@@ -531,6 +654,9 @@ export const useMerchantStore = (): UseMerchantStoreResult => {
       markPaid,
       fulfillRedemption,
       toggleDemoMode,
+      btcpayConfig,
+      setBTCPayConfig,
+      verifyBTCPayConnection,
     ],
   )
 

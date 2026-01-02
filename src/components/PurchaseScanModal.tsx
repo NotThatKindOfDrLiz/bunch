@@ -39,24 +39,44 @@ export const PurchaseScanModal = ({ open, onOpenChange, purchase, card, session 
           <QRCodeSVG value={JSON.stringify(payload)} size={260} className="mx-auto" />
         </div>
         {purchase && (
-          <div className="bg-brand-cream/50 rounded-2xl p-4 border border-black/5">
-            <p className="text-xs uppercase tracking-wider text-black/50 font-semibold mb-2">Purchase Code</p>
-            <div 
-              className="text-2xl font-mono tracking-wider text-center font-bold text-brand-charcoal break-all cursor-pointer select-all px-2 py-1 rounded-lg hover:bg-brand-cream/70 transition-colors"
-              onClick={(e) => {
-                const text = e.currentTarget.textContent
-                if (text) {
-                  navigator.clipboard.writeText(text.trim())
-                  toast.success('Code copied!')
-                }
-              }}
-              title="Click to copy"
-            >
-              {purchase.nonce}
+          <div className="space-y-3">
+            <div className="bg-brand-cream/50 rounded-2xl p-4 border border-black/5">
+              <p className="text-xs uppercase tracking-wider text-black/50 font-semibold mb-2">Purchase Code</p>
+              <div 
+                className="text-2xl font-mono tracking-wider text-center font-bold text-brand-charcoal break-all cursor-pointer select-all px-2 py-1 rounded-lg hover:bg-brand-cream/70 transition-colors"
+                onClick={(e) => {
+                  const text = e.currentTarget.textContent
+                  if (text) {
+                    navigator.clipboard.writeText(text.trim())
+                    toast.success('Code copied!')
+                  }
+                }}
+                title="Click to copy"
+              >
+                {purchase.nonce}
+              </div>
+              <p className="text-xs text-black/50 mt-2 text-center">
+                Click code to copy • Customer can paste this code manually
+              </p>
             </div>
-            <p className="text-xs text-black/50 mt-2 text-center">
-              Click code to copy • Customer can paste this code manually
-            </p>
+            {purchase.btcpayCheckoutLink && (
+              <div className="bg-green-50 rounded-2xl p-4 border border-green-200">
+                <p className="text-xs uppercase tracking-wider text-green-700 font-semibold mb-2">BTCPay Invoice</p>
+                <a
+                  href={purchase.btcpayCheckoutLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block text-sm text-green-700 hover:text-green-800 font-medium underline text-center"
+                >
+                  Open Payment Link →
+                </a>
+                {purchase.btcpayStatus && (
+                  <p className="text-xs text-green-600 mt-2 text-center">
+                    Status: {purchase.btcpayStatus}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         )}
         <p className="text-xs text-black/50 leading-relaxed">

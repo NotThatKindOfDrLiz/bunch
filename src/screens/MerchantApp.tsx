@@ -9,6 +9,7 @@ import { CardStats } from '../components/CardStats'
 import { EmptyStateCard } from '../components/EmptyStateCard'
 import { SessionCard } from '../components/SessionCard'
 import { MerchantStatusPanel } from '../components/MerchantStatusPanel'
+import { BTCPayConfigModal } from '../components/BTCPayConfigModal'
 
 export const MerchantApp = () => {
   const {
@@ -25,9 +26,13 @@ export const MerchantApp = () => {
     markPaid,
     fulfillRedemption,
     toggleDemoMode,
+    btcpayConfig,
+    setBTCPayConfig,
+    verifyBTCPayConnection,
   } = useMerchantStore()
 
   const [showPurchaseModal, setShowPurchaseModal] = useState(false)
+  const [showBTCPayConfig, setShowBTCPayConfig] = useState(false)
   const [lastGeneratedNonce, setLastGeneratedNonce] = useState<PurchaseNonce | null>(null)
 
   const handleCreateCard = async () => {
@@ -68,20 +73,35 @@ export const MerchantApp = () => {
             <p className="text-xs text-black/70 font-medium">Drop-in Bitcoin loyalty punch cards</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           {session && (
-            <button
-              className={classNames(
-                'px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-200 shadow-sm',
-                session.demoMode
-                  ? 'bg-gradient-to-r from-brand-orange to-orange-500 text-white shadow-md hover:shadow-lg hover:scale-105 active:scale-95'
-                  : 'bg-white border-2 border-brand-orange text-brand-orange hover:bg-brand-orange/10 hover:border-brand-orange/80',
+            <>
+              <button
+                className={classNames(
+                  'px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-200 shadow-sm',
+                  session.demoMode
+                    ? 'bg-gradient-to-r from-brand-orange to-orange-500 text-white shadow-md hover:shadow-lg hover:scale-105 active:scale-95'
+                    : 'bg-white border-2 border-brand-orange text-brand-orange hover:bg-brand-orange/10 hover:border-brand-orange/80',
+                )}
+                onClick={() => toggleDemoMode()}
+              >
+                Demo Payments: {session.demoMode ? 'ON' : 'OFF'}
+              </button>
+              {btcpayConfig && !session.demoMode && (
+                <div className="px-4 py-2 rounded-full bg-green-100 border border-green-300 text-green-700 text-xs font-semibold flex items-center gap-2">
+                  <span>₿</span>
+                  <span>BTCPay Connected</span>
+                </div>
               )}
-              onClick={() => toggleDemoMode()}
-            >
-              Demo Payments: {session.demoMode ? 'ON' : 'OFF'}
-            </button>
+            </>
           )}
+          <button
+            className="px-5 py-2.5 rounded-full bg-white border-2 border-black/10 text-black/70 text-sm font-bold hover:bg-black/5 transition-all duration-200"
+            onClick={() => setShowBTCPayConfig(true)}
+            title="Configure BTCPay Server"
+          >
+            {btcpayConfig ? '⚙️ BTCPay' : '⚙️ Setup BTCPay'}
+          </button>
           <button
             className="px-5 py-2.5 rounded-full bg-black text-white text-sm font-bold shadow-md hover:bg-black/90 hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-200"
             onClick={() => {
@@ -142,18 +162,54 @@ export const MerchantApp = () => {
                     key={purchase.nonce}
                     className="border border-black/10 rounded-2xl p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-gradient-to-br from-white to-brand-cream/30 shadow-sm hover:shadow-md transition-shadow duration-200"
                   >
-                    <div className="space-y-1.5">
-                      <p className="font-bold text-lg tracking-tight">Purchase #{purchase.nonce.slice(0, 5)}</p>
+                    <div className="space-y-1.5 flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="font-bold text-lg tracking-tight">Purchase #{purchase.nonce.slice(0, 5)}</p>
+                        {purchase.btcpayInvoiceId && (
+                          <span className="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
+                            ₿ Invoice
+                          </span>
+                        )}
+                        {purchase.btcpayStatus && (
+                          <span className={classNames(
+                            'px-2 py-0.5 rounded-full text-xs font-semibold',
+                            purchase.btcpayStatus === 'Paid' || purchase.btcpayStatus === 'Settled'
+                              ? 'bg-green-100 text-green-700'
+                              : purchase.btcpayStatus === 'Expired'
+                              ? 'bg-red-100 text-red-700'
+                              : 'bg-yellow-100 text-yellow-700'
+                          )}>
+                            {purchase.btcpayStatus}
+                          </span>
+                        )}
+                      </div>
                       <p className="text-xs text-black/50 font-medium">
                         Expires in {Math.max(0, Math.floor((purchase.expiresAt - Date.now()) / 60000))} min
                       </p>
+                      {purchase.btcpayCheckoutLink && (
+                        <a
+                          href={purchase.btcpayCheckoutLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-brand-orange hover:underline font-medium inline-flex items-center gap-1"
+                        >
+                          View Invoice →
+                        </a>
+                      )}
                     </div>
-                    <button
-                      className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-orange to-orange-500 text-white text-sm font-bold shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-200"
-                      onClick={() => markPaid(purchase.nonce)}
-                    >
-                      Mark paid
-                    </button>
+                    <div className="flex items-center gap-2">
+                      {purchase.btcpayInvoiceId && !session?.demoMode && (
+                        <span className="text-xs text-black/40 font-medium">
+                          Auto-tracking
+                        </span>
+                      )}
+                      <button
+                        className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-orange to-orange-500 text-white text-sm font-bold shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-200"
+                        onClick={() => markPaid(purchase.nonce)}
+                      >
+                        Mark paid
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -170,6 +226,13 @@ export const MerchantApp = () => {
         purchase={lastGeneratedNonce}
         card={card}
         session={session}
+      />
+
+      <BTCPayConfigModal
+        open={showBTCPayConfig}
+        onOpenChange={setShowBTCPayConfig}
+        currentConfig={btcpayConfig}
+        onSave={setBTCPayConfig}
       />
     </div>
   )

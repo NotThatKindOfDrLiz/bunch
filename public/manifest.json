@@ -1,0 +1,44 @@
+{
+  "name": "Bunch – Bitcoin Loyalty Punch Cards",
+  "short_name": "Bunch",
+  "description": "Drop-in Bitcoin loyalty punch cards for merchants and customers",
+  "start_url": "/bunch/",
+  "scope": "/bunch/",
+  "display": "standalone",
+  "background_color": "#FFF5EB",
+  "theme_color": "#FF7A1A",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/bunch/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/bunch/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "business"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Merchant",
+      "short_name": "Merchant",
+      "description": "Open merchant view",
+      "url": "/bunch/merchant",
+      "icons": [{ "src": "/bunch/logo.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Customer",
+      "short_name": "Customer",
+      "description": "Open customer view",
+      "url": "/bunch/customer",
+      "icons": [{ "src": "/bunch/logo.png", "sizes": "192x192" }]
+    }
+  ]
+}
+

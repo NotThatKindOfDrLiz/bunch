@@ -9,4 +9,13 @@ export default defineConfig({
     host: true, // Listen on all network interfaces (allows phone access)
     port: 5173,
   },
+  build: {
+    rollupOptions: {
+      // Ensure service worker is copied to dist
+      input: {
+        main: './index.html',
+      },
+    },
+  },
+  publicDir: 'public',
 })

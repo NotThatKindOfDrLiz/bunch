@@ -44,6 +44,10 @@ export interface PurchaseNonce {
   customerId?: UUID
   claimedAt?: number
   redeemedAt?: number
+  // BTCPay Server integration
+  btcpayInvoiceId?: string
+  btcpayCheckoutLink?: string
+  btcpayStatus?: 'New' | 'Processing' | 'Expired' | 'Invalid' | 'Settled' | 'Paid'
 }
 
 export interface PunchLedgerEntry {

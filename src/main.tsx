@@ -5,6 +5,7 @@ import './index.css'
 import { MerchantApp } from './screens/MerchantApp'
 import { CustomerApp } from './screens/CustomerApp'
 import { Toaster } from 'react-hot-toast'
+import { InstallPrompt } from './components/InstallPrompt'
 
 declare global {
   interface Window {
@@ -27,6 +28,28 @@ if (window.location.search.includes('?/')) {
       : import.meta.env.BASE_URL
     window.history.replaceState({}, '', `${baseUrl}${newPath}`)
   }
+}
+
+// Register Service Worker for PWA
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    const baseUrl = import.meta.env.BASE_URL.endsWith('/') 
+      ? import.meta.env.BASE_URL.slice(0, -1) 
+      : import.meta.env.BASE_URL
+    navigator.serviceWorker
+      .register(`${baseUrl}/sw.js`)
+      .then((registration) => {
+        console.log('[Service Worker] Registered:', registration.scope)
+        
+        // Check for updates periodically
+        setInterval(() => {
+          registration.update()
+        }, 60 * 60 * 1000) // Check every hour
+      })
+      .catch((error) => {
+        console.warn('[Service Worker] Registration failed:', error)
+      })
+  })
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
@@ -52,5 +75,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         border: '1px solid rgba(255, 255, 255, 0.1)',
       },
     }} />
+    <InstallPrompt />
   </React.StrictMode>,
 )
