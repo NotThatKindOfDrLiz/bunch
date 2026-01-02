@@ -7,6 +7,10 @@
 import type { PaymentProviderConfig } from './paymentProviders'
 import type { BTCPayServerConfig } from './providers/btcpayProvider'
 
+function isBTCPayConfig(config: PaymentProviderConfig): config is BTCPayServerConfig {
+  return config.provider === 'btcpay' && 'serverUrl' in config && 'apiKey' in config && 'storeId' in config
+}
+
 const CONFIG_STORAGE_KEY = 'bunch:payment-provider-config'
 
 /**
@@ -32,8 +36,8 @@ export function savePaymentConfig(config: PaymentProviderConfig | null): void {
   if (config) {
     localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(config))
     // Also save legacy BTCPay config for backward compatibility
-    if (config.provider === 'btcpay') {
-      saveLegacyBTCPayConfig(config as BTCPayServerConfig)
+    if (isBTCPayConfig(config)) {
+      saveLegacyBTCPayConfig(config)
     }
   } else {
     localStorage.removeItem(CONFIG_STORAGE_KEY)

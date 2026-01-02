@@ -9,7 +9,8 @@ import { CardStats } from '../components/CardStats'
 import { EmptyStateCard } from '../components/EmptyStateCard'
 import { SessionCard } from '../components/SessionCard'
 import { MerchantStatusPanel } from '../components/MerchantStatusPanel'
-import { BTCPayConfigModal } from '../components/BTCPayConfigModal'
+import { PaymentProviderConfigModal } from '../components/PaymentProviderConfigModal'
+import { paymentProviderRegistry } from '../utils/paymentProviders'
 
 export const MerchantApp = () => {
   const {
@@ -26,8 +27,8 @@ export const MerchantApp = () => {
     markPaid,
     fulfillRedemption,
     toggleDemoMode,
-    btcpayConfig,
-    setBTCPayConfig,
+    paymentConfig,
+    setPaymentConfig,
   } = useMerchantStore()
 
   const [showPurchaseModal, setShowPurchaseModal] = useState(false)
@@ -86,20 +87,25 @@ export const MerchantApp = () => {
               >
                 Demo Payments: {session.demoMode ? 'ON' : 'OFF'}
               </button>
-              {btcpayConfig && !session.demoMode && (
-                <div className="px-4 py-2 rounded-full bg-green-100 border border-green-300 text-green-700 text-xs font-semibold flex items-center gap-2">
-                  <span>₿</span>
-                  <span>BTCPay Connected</span>
-                </div>
-              )}
+              {paymentConfig && !session.demoMode && (() => {
+                const provider = paymentProviderRegistry.get(paymentConfig.provider)
+                return provider ? (
+                  <div className="px-4 py-2 rounded-full bg-green-100 border border-green-300 text-green-700 text-xs font-semibold flex items-center gap-2">
+                    <span>₿</span>
+                    <span>{provider.name} Connected</span>
+                  </div>
+                ) : null
+              })()}
             </>
           )}
           <button
             className="px-5 py-2.5 rounded-full bg-white border-2 border-black/10 text-black/70 text-sm font-bold hover:bg-black/5 transition-all duration-200"
             onClick={() => setShowBTCPayConfig(true)}
-            title="Configure BTCPay Server"
+            title="Configure Payment Provider"
           >
-            {btcpayConfig ? '⚙️ BTCPay' : '⚙️ Setup BTCPay'}
+            {paymentConfig
+              ? `⚙️ ${paymentProviderRegistry.get(paymentConfig.provider)?.name || 'Payment'}`
+              : '⚙️ Setup Payment'}
           </button>
           <button
             className="px-5 py-2.5 rounded-full bg-black text-white text-sm font-bold shadow-md hover:bg-black/90 hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-200"
@@ -164,30 +170,31 @@ export const MerchantApp = () => {
                     <div className="space-y-1.5 flex-1">
                       <div className="flex items-center gap-2">
                         <p className="font-bold text-lg tracking-tight">Purchase #{purchase.nonce.slice(0, 5)}</p>
-                        {purchase.btcpayInvoiceId && (
+                        {(purchase.paymentInvoiceId || purchase.btcpayInvoiceId) && (
                           <span className="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
                             ₿ Invoice
                           </span>
                         )}
-                        {purchase.btcpayStatus && (
+                        {(purchase.paymentStatus || purchase.btcpayStatus) && (
                           <span className={classNames(
                             'px-2 py-0.5 rounded-full text-xs font-semibold',
-                            purchase.btcpayStatus === 'Paid' || purchase.btcpayStatus === 'Settled'
+                            (purchase.paymentStatus || purchase.btcpayStatus) === 'Paid' || 
+                            (purchase.paymentStatus || purchase.btcpayStatus) === 'Settled'
                               ? 'bg-green-100 text-green-700'
-                              : purchase.btcpayStatus === 'Expired'
+                              : (purchase.paymentStatus || purchase.btcpayStatus) === 'Expired'
                               ? 'bg-red-100 text-red-700'
                               : 'bg-yellow-100 text-yellow-700'
                           )}>
-                            {purchase.btcpayStatus}
+                            {purchase.paymentStatus || purchase.btcpayStatus}
                           </span>
                         )}
                       </div>
                       <p className="text-xs text-black/50 font-medium">
                         Expires in {Math.max(0, Math.floor((purchase.expiresAt - Date.now()) / 60000))} min
                       </p>
-                      {purchase.btcpayCheckoutLink && (
+                      {(purchase.paymentCheckoutLink || purchase.btcpayCheckoutLink) && (
                         <a
-                          href={purchase.btcpayCheckoutLink}
+                          href={purchase.paymentCheckoutLink || purchase.btcpayCheckoutLink}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-xs text-brand-orange hover:underline font-medium inline-flex items-center gap-1"
@@ -197,7 +204,7 @@ export const MerchantApp = () => {
                       )}
                     </div>
                     <div className="flex items-center gap-2">
-                      {purchase.btcpayInvoiceId && !session?.demoMode && (
+                      {(purchase.paymentInvoiceId || purchase.btcpayInvoiceId) && !session?.demoMode && (
                         <span className="text-xs text-black/40 font-medium">
                           Auto-tracking
                         </span>
@@ -227,11 +234,11 @@ export const MerchantApp = () => {
         session={session}
       />
 
-      <BTCPayConfigModal
+      <PaymentProviderConfigModal
         open={showBTCPayConfig}
         onOpenChange={setShowBTCPayConfig}
-        currentConfig={btcpayConfig}
-        onSave={setBTCPayConfig}
+        currentConfig={paymentConfig}
+        onSave={setPaymentConfig}
       />
     </div>
   )

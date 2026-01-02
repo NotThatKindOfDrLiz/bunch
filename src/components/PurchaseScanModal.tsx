@@ -59,20 +59,22 @@ export const PurchaseScanModal = ({ open, onOpenChange, purchase, card, session 
                 Click code to copy • Customer can paste this code manually
               </p>
             </div>
-            {purchase.btcpayCheckoutLink && (
+            {(purchase.paymentCheckoutLink || purchase.btcpayCheckoutLink) && (
               <div className="bg-green-50 rounded-2xl p-4 border border-green-200">
-                <p className="text-xs uppercase tracking-wider text-green-700 font-semibold mb-2">BTCPay Invoice</p>
+                <p className="text-xs uppercase tracking-wider text-green-700 font-semibold mb-2">
+                  {purchase.paymentProvider === 'lnbits' ? 'LNbits' : 'Payment'} Invoice
+                </p>
                 <a
-                  href={purchase.btcpayCheckoutLink}
+                  href={purchase.paymentCheckoutLink || purchase.btcpayCheckoutLink}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block text-sm text-green-700 hover:text-green-800 font-medium underline text-center"
                 >
                   Open Payment Link →
                 </a>
-                {purchase.btcpayStatus && (
+                {(purchase.paymentStatus || purchase.btcpayStatus) && (
                   <p className="text-xs text-green-600 mt-2 text-center">
-                    Status: {purchase.btcpayStatus}
+                    Status: {purchase.paymentStatus || purchase.btcpayStatus}
                   </p>
                 )}
               </div>

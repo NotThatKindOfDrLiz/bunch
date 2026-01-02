@@ -8,9 +8,11 @@ import { Toaster } from 'react-hot-toast'
 import { InstallPrompt } from './components/InstallPrompt'
 import { paymentProviderRegistry } from './utils/paymentProviders'
 import { btcpayProvider } from './utils/providers/btcpayProvider'
+import { lnbitsProvider } from './utils/providers/lnbitsProvider'
 
 // Register payment providers
 paymentProviderRegistry.register(btcpayProvider)
+paymentProviderRegistry.register(lnbitsProvider)
 
 declare global {
   interface Window {

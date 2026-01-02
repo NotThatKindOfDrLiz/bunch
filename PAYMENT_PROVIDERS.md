@@ -35,9 +35,14 @@ paymentProviderRegistry.register(btcpayProvider)
   - Implementation: `src/utils/providers/btcpayProvider.ts`
   - Registered in `src/main.tsx`
 
+- **LNbits** (`lnbits`) - Self-hosted Lightning wallet, no custody
+  - Implementation: `src/utils/providers/lnbitsProvider.ts`
+  - Registered in `src/main.tsx`
+  - Requires: Server URL, API key (invoice/read key), optional wallet ID
+
 ### Adding a New Provider
 
-To add a new provider (e.g., LNbits):
+To add a new provider (e.g., Strike, OpenNode):
 
 1. **Create provider implementation** (`src/utils/providers/lnbitsProvider.ts`):
 ```typescript
