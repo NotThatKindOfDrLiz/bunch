@@ -44,9 +44,17 @@ export interface PurchaseNonce {
   customerId?: UUID
   claimedAt?: number
   redeemedAt?: number
-  // BTCPay Server integration
+  // Payment provider integration (provider-agnostic)
+  paymentProvider?: string // 'btcpay' | 'lnbits' | etc.
+  paymentInvoiceId?: string
+  paymentCheckoutLink?: string
+  paymentStatus?: 'New' | 'Processing' | 'Expired' | 'Invalid' | 'Settled' | 'Paid'
+  // Legacy BTCPay fields (for backward compatibility)
+  /** @deprecated Use paymentInvoiceId instead */
   btcpayInvoiceId?: string
+  /** @deprecated Use paymentCheckoutLink instead */
   btcpayCheckoutLink?: string
+  /** @deprecated Use paymentStatus instead */
   btcpayStatus?: 'New' | 'Processing' | 'Expired' | 'Invalid' | 'Settled' | 'Paid'
 }
 

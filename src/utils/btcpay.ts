@@ -2,6 +2,9 @@
  * BTCPay Server API client utilities
  * 
  * Documentation: https://docs.btcpayserver.org/API/Greenfield/v1/
+ * 
+ * @deprecated Use the payment provider abstraction (paymentProviders.ts) instead.
+ * This file is kept for backward compatibility and will be removed in a future version.
  */
 
 export interface BTCPayServerConfig {

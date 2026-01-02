@@ -31,8 +31,16 @@ import {
 import { useBroadcastChannel } from '../hooks/useBroadcastChannel'
 import { deleteSessionSnapshot, setSessionSnapshot } from '../lib/storage'
 import {
-  createBTCPayInvoice,
-  getBTCPayInvoice,
+  paymentProviderRegistry,
+  type PaymentProviderConfig,
+} from '../utils/paymentProviders'
+import {
+  loadPaymentConfig,
+  savePaymentConfig,
+  clearPaymentConfig,
+} from '../utils/paymentConfig'
+// Legacy BTCPay imports for backward compatibility
+import {
   loadBTCPayConfig,
   saveBTCPayConfig,
   clearBTCPayConfig,
@@ -54,9 +62,16 @@ interface UseMerchantStoreResult extends MerchantState {
   markPaid: (nonce: string, customerId?: string) => Promise<void>
   fulfillRedemption: (requestId: string) => Promise<void>
   toggleDemoMode: () => Promise<void>
-  // BTCPay Server integration
+  // Payment provider integration (provider-agnostic)
+  paymentConfig: PaymentProviderConfig | null
+  setPaymentConfig: (config: PaymentProviderConfig | null) => Promise<void>
+  verifyPaymentConnection: () => Promise<boolean>
+  // Legacy BTCPay methods (for backward compatibility)
+  /** @deprecated Use paymentConfig instead */
   btcpayConfig: BTCPayServerConfig | null
+  /** @deprecated Use setPaymentConfig instead */
   setBTCPayConfig: (config: BTCPayServerConfig | null) => Promise<void>
+  /** @deprecated Use verifyPaymentConnection instead */
   verifyBTCPayConnection: () => Promise<boolean>
 }
 
@@ -89,6 +104,8 @@ export const useMerchantStore = (): UseMerchantStoreResult => {
     punchLedger: [],
     redemptionRequests: [],
   })
+  const [paymentConfig, setPaymentConfigState] = useState<PaymentProviderConfig | null>(loadPaymentConfig())
+  // Legacy BTCPay state for backward compatibility
   const [btcpayConfig, setBTCPayConfigState] = useState<BTCPayServerConfig | null>(loadBTCPayConfig())
 
   const refresh = useCallback(async () => {
@@ -103,10 +120,13 @@ export const useMerchantStore = (): UseMerchantStoreResult => {
     void refresh()
   }, [refresh])
 
-  // Load BTCPay config on mount
+  // Load payment config on mount
   useEffect(() => {
-    const config = loadBTCPayConfig()
-    setBTCPayConfigState(config)
+    const config = loadPaymentConfig()
+    setPaymentConfigState(config)
+    // Also load legacy BTCPay config for backward compatibility
+    const legacyConfig = loadBTCPayConfig()
+    setBTCPayConfigState(legacyConfig)
   }, [])
 
   const merchantBroadcast = useBroadcastChannel<MerchantToCustomerMessage>(
@@ -410,33 +430,42 @@ export const useMerchantStore = (): UseMerchantStoreResult => {
       expiresAt: Date.now() + TEN_MINUTES,
     }
 
-    // If BTCPay Server is configured and not in demo mode, create an invoice
-    if (btcpayConfig && !session.demoMode) {
-      try {
-        const invoice = await createBTCPayInvoice(btcpayConfig, {
-          amount: card.minSats,
-          currency: 'SATS',
-          metadata: {
-            purchaseNonce: nonce.nonce,
-            cardId: card.id,
-            sessionId: session.id,
-            cardTitle: card.title,
-          },
-          checkout: {
+    // If payment provider is configured and not in demo mode, create an invoice
+    if (paymentConfig && !session.demoMode) {
+      const provider = paymentProviderRegistry.get(paymentConfig.provider)
+      if (provider) {
+        try {
+          const invoice = await provider.createInvoice(paymentConfig, {
+            amount: card.minSats,
+            currency: 'SATS',
+            metadata: {
+              purchaseNonce: nonce.nonce,
+              cardId: card.id,
+              sessionId: session.id,
+              cardTitle: card.title,
+            },
             expirationMinutes: 10,
-            monitoringMinutes: 10,
-          },
-        })
-        
-        nonce.btcpayInvoiceId = invoice.id
-        nonce.btcpayCheckoutLink = invoice.checkoutLink
-        nonce.btcpayStatus = invoice.status
-        
-        toast.success('BTCPay invoice created', { icon: '₿' })
-      } catch (error) {
-        console.error('[Merchant] Failed to create BTCPay invoice:', error)
-        toast.error(`BTCPay error: ${error instanceof Error ? error.message : 'Unknown error'}`)
-        // Continue with nonce creation even if invoice fails
+          })
+          
+          // Store provider-agnostic invoice data
+          nonce.paymentProvider = paymentConfig.provider
+          nonce.paymentInvoiceId = invoice.id
+          nonce.paymentCheckoutLink = invoice.checkoutLink
+          nonce.paymentStatus = invoice.status
+          
+          // Legacy BTCPay fields for backward compatibility
+          if (paymentConfig.provider === 'btcpay') {
+            nonce.btcpayInvoiceId = invoice.id
+            nonce.btcpayCheckoutLink = invoice.checkoutLink
+            nonce.btcpayStatus = invoice.status
+          }
+          
+          toast.success(`${provider.name} invoice created`, { icon: '₿' })
+        } catch (error) {
+          console.error(`[Merchant] Failed to create ${provider.name} invoice:`, error)
+          toast.error(`${provider.name} error: ${error instanceof Error ? error.message : 'Unknown error'}`)
+          // Continue with nonce creation even if invoice fails
+        }
       }
     }
     
@@ -444,7 +473,7 @@ export const useMerchantStore = (): UseMerchantStoreResult => {
     toast('Purchase QR ready', { icon: '📱' })
     void refresh()
     return nonce
-  }, [refresh, btcpayConfig])
+  }, [refresh, paymentConfig])
 
   const recordLedgerEntry = async (
     purchase: PurchaseNonce,
@@ -547,49 +576,104 @@ export const useMerchantStore = (): UseMerchantStoreResult => {
     void refresh()
   }, [merchantBroadcast, refresh])
 
-  // BTCPay Server configuration management
-  const setBTCPayConfig = useCallback(async (config: BTCPayServerConfig | null) => {
+  // Payment provider configuration management (provider-agnostic)
+  const setPaymentConfig = useCallback(async (config: PaymentProviderConfig | null) => {
     if (config) {
-      const isValid = await verifyBTCPayConfig(config)
-      if (!isValid) {
-        toast.error('Invalid BTCPay Server configuration. Please check your server URL, API key, and store ID.')
+      const provider = paymentProviderRegistry.get(config.provider)
+      if (!provider) {
+        toast.error(`Unknown payment provider: ${config.provider}`)
         return
       }
-      saveBTCPayConfig(config)
-      setBTCPayConfigState(config)
-      toast.success('BTCPay Server configured successfully')
+      const isValid = await provider.verifyConfig(config)
+      if (!isValid) {
+        toast.error(`Invalid ${provider.name} configuration. Please check your settings.`)
+        return
+      }
+      savePaymentConfig(config)
+      setPaymentConfigState(config)
+      // Also update legacy BTCPay config for backward compatibility
+      if (config.provider === 'btcpay' && 'serverUrl' in config && 'apiKey' in config && 'storeId' in config) {
+        const legacyConfig: BTCPayServerConfig = {
+          serverUrl: config.serverUrl as string,
+          apiKey: config.apiKey as string,
+          storeId: config.storeId as string,
+        }
+        saveBTCPayConfig(legacyConfig)
+        setBTCPayConfigState(legacyConfig)
+      }
+      toast.success(`${provider.name} configured successfully`)
     } else {
+      clearPaymentConfig()
+      setPaymentConfigState(null)
       clearBTCPayConfig()
       setBTCPayConfigState(null)
-      toast('BTCPay Server configuration cleared')
+      toast('Payment provider configuration cleared')
     }
   }, [])
+
+  const verifyPaymentConnection = useCallback(async () => {
+    if (!paymentConfig) return false
+    const provider = paymentProviderRegistry.get(paymentConfig.provider)
+    if (!provider) return false
+    return provider.verifyConfig(paymentConfig)
+  }, [paymentConfig])
+
+  // Legacy BTCPay Server configuration management (for backward compatibility)
+  const setBTCPayConfig = useCallback(async (config: BTCPayServerConfig | null) => {
+    if (config) {
+      // Convert to new format
+      const newConfig: PaymentProviderConfig = {
+        provider: 'btcpay',
+        serverUrl: config.serverUrl,
+        apiKey: config.apiKey,
+        storeId: config.storeId,
+      }
+      await setPaymentConfig(newConfig)
+    } else {
+      await setPaymentConfig(null)
+    }
+  }, [setPaymentConfig])
 
   const verifyBTCPayConnection = useCallback(async () => {
     if (!btcpayConfig) return false
     return verifyBTCPayConfig(btcpayConfig)
   }, [btcpayConfig])
 
-  // Poll BTCPay invoices for pending purchases
-  const pollBTCPayInvoices = useCallback(async () => {
-    if (!btcpayConfig || !state.session || state.session.demoMode) return
+  // Poll payment provider invoices for pending purchases (provider-agnostic)
+  const pollPaymentInvoices = useCallback(async () => {
+    if (!paymentConfig || !state.session || state.session.demoMode) return
     
-    const pendingWithInvoices = state.pendingPurchases.filter(p => p.btcpayInvoiceId && !p.redeemedAt)
+    const provider = paymentProviderRegistry.get(paymentConfig.provider)
+    if (!provider) return
+    
+    // Check both new provider-agnostic fields and legacy BTCPay fields
+    const pendingWithInvoices = state.pendingPurchases.filter(
+      p => (p.paymentInvoiceId || p.btcpayInvoiceId) && !p.redeemedAt
+    )
     if (pendingWithInvoices.length === 0) return
 
     for (const purchase of pendingWithInvoices) {
-      if (!purchase.btcpayInvoiceId) continue
+      const invoiceId = purchase.paymentInvoiceId || purchase.btcpayInvoiceId
+      if (!invoiceId) continue
       
       try {
-        const invoice = await getBTCPayInvoice(btcpayConfig, purchase.btcpayInvoiceId)
+        const invoice = await provider.getInvoice(paymentConfig, invoiceId)
         
         // Update purchase with latest invoice status
-        if (purchase.btcpayStatus !== invoice.status) {
-          await savePurchaseNonce({
+        const currentStatus = purchase.paymentStatus || purchase.btcpayStatus
+        if (currentStatus !== invoice.status) {
+          const updated: PurchaseNonce = {
             ...purchase,
-            btcpayStatus: invoice.status,
-            btcpayCheckoutLink: invoice.checkoutLink,
-          })
+            paymentProvider: paymentConfig.provider,
+            paymentStatus: invoice.status,
+            paymentCheckoutLink: invoice.checkoutLink,
+          }
+          // Legacy BTCPay fields for backward compatibility
+          if (paymentConfig.provider === 'btcpay') {
+            updated.btcpayStatus = invoice.status
+            updated.btcpayCheckoutLink = invoice.checkoutLink
+          }
+          await savePurchaseNonce(updated)
         }
         
         // Auto-mark as paid if invoice is settled or paid
@@ -598,21 +682,24 @@ export const useMerchantStore = (): UseMerchantStoreResult => {
           const card = await getCard()
           if (card && amount >= card.minSats) {
             await markPaid(purchase.nonce, purchase.customerId)
-            toast.success(`Invoice ${invoice.id.slice(0, 8)}... paid automatically`, { icon: '₿' })
+            toast.success(`${provider.name} invoice ${invoice.id.slice(0, 8)}... paid automatically`, { icon: '₿' })
           } else if (card) {
             toast.error(`Invoice amount ${amount} sats is less than minimum ${card.minSats} sats`)
           }
         }
       } catch (error) {
-        console.error(`[Merchant] Failed to poll invoice ${purchase.btcpayInvoiceId}:`, error)
+        console.error(`[Merchant] Failed to poll ${provider.name} invoice ${invoiceId}:`, error)
       }
     }
     
     void refresh()
-  }, [btcpayConfig, state.session, state.pendingPurchases, markPaid, refresh])
+  }, [paymentConfig, state.session, state.pendingPurchases, markPaid, refresh])
 
-  // Poll every 5 seconds for BTCPay invoices
-  useInterval(pollBTCPayInvoices, state.session && !state.session.demoMode && btcpayConfig ? 5000 : null)
+  // Poll every 5 seconds for payment provider invoices
+  useInterval(
+    pollPaymentInvoices,
+    state.session && !state.session.demoMode && paymentConfig ? 5000 : null
+  )
 
   useEffect(() => {
     if (!state.session) {
@@ -639,6 +726,11 @@ export const useMerchantStore = (): UseMerchantStoreResult => {
       markPaid,
       fulfillRedemption,
       toggleDemoMode,
+      // New provider-agnostic API
+      paymentConfig,
+      setPaymentConfig,
+      verifyPaymentConnection,
+      // Legacy BTCPay API (for backward compatibility)
       btcpayConfig,
       setBTCPayConfig,
       verifyBTCPayConnection,
@@ -654,6 +746,9 @@ export const useMerchantStore = (): UseMerchantStoreResult => {
       markPaid,
       fulfillRedemption,
       toggleDemoMode,
+      paymentConfig,
+      setPaymentConfig,
+      verifyPaymentConnection,
       btcpayConfig,
       setBTCPayConfig,
       verifyBTCPayConnection,

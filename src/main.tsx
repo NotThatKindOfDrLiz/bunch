@@ -6,6 +6,11 @@ import { MerchantApp } from './screens/MerchantApp'
 import { CustomerApp } from './screens/CustomerApp'
 import { Toaster } from 'react-hot-toast'
 import { InstallPrompt } from './components/InstallPrompt'
+import { paymentProviderRegistry } from './utils/paymentProviders'
+import { btcpayProvider } from './utils/providers/btcpayProvider'
+
+// Register payment providers
+paymentProviderRegistry.register(btcpayProvider)
 
 declare global {
   interface Window {
